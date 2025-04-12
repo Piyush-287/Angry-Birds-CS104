@@ -1,0 +1,17 @@
+#Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+#OS files
+.DS_Store
+Thumbs.db
+
+#Pygame-specific (if you cache anything)
+*.log
+
+#Latex specific
+*.aux
+*.log
+settings.txt
