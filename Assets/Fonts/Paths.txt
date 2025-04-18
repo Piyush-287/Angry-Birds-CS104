@@ -1,0 +1,2 @@
+AngryBirds,angrybirds-regular.ttf,64
+ShadowFight,Fighting_Spirit_2.ttf,64

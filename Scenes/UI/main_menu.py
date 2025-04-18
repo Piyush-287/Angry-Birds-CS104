@@ -1,0 +1,190 @@
+import sys, os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+from load import *
+import pygame
+
+import pygame
+
+class Button:
+    def __init__(self,posn_pct,size, image, screen, on_click):
+        """
+        posn_pct: Tuple of (x_percentage, y_percentage) e.g. (0.5, 0.3)
+        image: pygame.Surface (pre-loaded image)
+        screen: pygame display Surface (to get size for positioning)
+        on_click: Function to call when button is clicked
+        """
+        self.posn_pct = posn_pct
+        self.original_image = image
+        self.screen = screen
+        self.on_click = on_click
+        self.size=size
+        self.original_size=size
+        self.scale_up=size *1.05
+
+        # Get screen dimensions
+        screen_width, screen_height = self.screen.get_size()
+
+        # Calculate position in pixels
+        self.x = int(self.posn_pct[0] * screen_width)
+        self.y = int(self.posn_pct[1] * screen_height)
+        self.original_image_size=self.original_image.get_size()
+        self.width=int(self.size  * screen_width)
+        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
+
+        # Get image rect and center it at (x, y)
+        self.image=pygame.transform.scale(self.original_image,(self.width,self.height))
+        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+
+    def draw(self):
+        # Draw the image
+        self.screen.blit(self.image, self.rect)
+
+    def update(self,screen):
+        self.screen=screen
+        screen_width, screen_height = screen.get_size()
+        self.x = int(self.posn_pct[0] * screen_width)
+        self.y = int(self.posn_pct[1] * screen_height)
+        self.width=int(self.size  * screen_width)
+        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
+        self.image = pygame.transform.scale(self.original_image, (self.width, self.height))
+        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+
+    def update_center(self,screen):
+        self.screen=screen
+        screen_width, screen_height = screen.get_size()
+        self.width=int(self.size  * screen_width)
+        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
+        center_new=(self.x+self.width//2, self.y+self.height//2)
+        self.image = pygame.transform.scale(self.original_image, (self.width, self.height))
+        self.rect = self.image.get_rect(center=center_new)
+
+    def check_click(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            self.animate_click()
+            return self.on_click()
+        return True
+
+    def animate_click(self):
+        clock = pygame.time.Clock()
+        frames = 5
+        grow_size = self.scale_up
+        grow_step = (grow_size - self.size) / (frames // 2)
+
+        # Grow
+        for _ in range(frames // 2):
+            self.size += grow_step
+            self.update_center(self.screen)
+            self.draw()
+            clock.tick(60)
+            pygame.display.flip()
+
+        # Shrink
+        for _ in range(frames // 2):
+            self.size -= grow_step
+            self.update_center(self.screen)
+            self.draw()
+            clock.tick(60)
+            pygame.display.flip()
+
+        # Reset just in case
+        self.size = self.original_size
+        self.update_center(self.screen)
+        self.draw()
+        
+def yo():
+    print("Yo has been implemented")
+    return True
+
+def quit():
+    return False
+
+def update_logo(screen):
+    screen_size=screen.get_size()
+    img1=pygame.transform.scale(IMAGES["LOGO"],(int(0.6*screen_size[0]),int(0.6*screen_size[0]*IMAGES["LOGO"].get_height()/IMAGES["LOGO"].get_width())))
+    img2=pygame.transform.scale(IMAGES["LOGO2"],(int(0.3*screen_size[0]),int(0.3*screen_size[0]*IMAGES["LOGO2"].get_height()/IMAGES["LOGO2"].get_width())))
+    return img1,img2
+def draw_logo(screen:pygame.Surface,img1:pygame.image,img2):
+    screen_size=screen.get_size()
+    screen.blit(img1,(0.2*screen_size[0],0.05*screen_size[1]))
+    screen.blit(img2,(0.8*screen_size[0]-img2.get_width(),0.04*screen_size[1]+img1.get_height()))
+
+def main_menu(screen):
+    print("Entered main menu")
+    screen_size=screen.get_size()
+    Buttons=list()
+    #Adding all 6 buttons at the relative position:
+    Buttons.append(Button((0.15,0.4),0.3,IMAGES["NEW_GAME"],screen,yo))
+    Buttons.append(Button((0.55,0.4),0.3,IMAGES["LOAD_PREV"],screen,yo))
+    Buttons.append(Button((0.15,0.6),0.3,IMAGES["SETTINGS"],screen,yo))
+    Buttons.append(Button((0.55,0.6),0.3,IMAGES["CONTROLS"],screen,yo))
+    Buttons.append(Button((0.15,0.8),0.3,IMAGES["CREDITS"],screen,yo))
+    Buttons.append(Button((0.55,0.8),0.3,IMAGES["QUIT"],screen,quit))
+    # Buttons.append(Button((0.2,0.1),(0.3,0.15),IMAGES["NEW_GAME"],screen,yo))
+    menu=True
+    RESIZED["MAIN_BACKGROUND"]=pygame.transform.scale(IMAGES["MAIN_BACKGROUND"],screen.get_size())
+    img1,img2=update_logo(screen)
+    while menu:
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                return False
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                mouse_pos=pygame.mouse.get_pos()
+                for button in Buttons:
+                    if not button.check_click(mouse_pos): return False
+            if event.type==pygame.VIDEORESIZE:
+                screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                RESIZED["MAIN_BACKGROUND"]=pygame.transform.scale(IMAGES["MAIN_BACKGROUND"],screen.get_size())
+                for button in Buttons:
+                    button.update(screen)
+                img1,img2=update_logo(screen)
+                
+                
+        screen.blit(RESIZED["MAIN_BACKGROUND"],(0,0))
+        for button in Buttons:
+            button.draw()
+        
+        draw_logo(screen,img1,img2)
+        pygame.display.flip()
+
+
+if __name__=="__main__":
+    import pygame
+    import random 
+    # Colors 
+    COLORS = {
+        "red": (255,0,0), "green": (0,255,0), "blue": (0,0,255), "white": (255,255,255),
+        "black": (0,0,0), "yellow": (255,255,0), "pink": (255,192,203), "orange": (255,165,0),
+        "violet": (138,43,226), "gray": (128,128,128), "cyan": (0,255,255), "magenta": (255,0,255)
+    }
+    BG_COLOR="blue"
+    
+    # STANDARD VARIABLES
+    WINDOW_SIZE=(720,450)
+    TICKS=10
+    
+    # INGAME VARIABLES
+    screen=pygame.display.set_mode(WINDOW_SIZE,pygame.RESIZABLE | pygame.SCALED)
+    pygame.display.set_caption("")
+    clock=pygame.time.Clock()
+    
+    IMAGES,RESIZED=load_images()
+    FONTS=load_fonts()
+    
+    game = True
+    while game:
+        clock.tick(TICKS)
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                game = False
+        #Game Calculations
+    
+        # Update Everything
+    
+        #Background 
+        if not main_menu(screen):
+            game=False
+        pygame.display.flip()
+    
+    pygame.display.quit()

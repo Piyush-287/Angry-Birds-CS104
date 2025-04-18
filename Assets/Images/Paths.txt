@@ -1,0 +1,10 @@
+BACKGROUND_IMAGE,Background_image.png,0
+MAIN_BACKGROUND,new_blur.png,0
+LOGO,Angry_Birds_logo.png,0
+LOGO2,SHADOW_FLIGHT.png,0
+NEW_GAME,New_game_button.png,0
+LOAD_PREV,loadprev.png,0
+CONTROLS,controls.png,0
+QUIT,quit.png,0
+CREDITS,credits.png,0
+SETTINGS,settings.png,0

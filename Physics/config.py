@@ -1,0 +1,4 @@
+import pygame
+GRAVITY    = 80
+METER = 10 #per 100 inches
+E = 0.1 # coefficint of restitution
