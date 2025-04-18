@@ -12,7 +12,6 @@ def load_images():
             IMAGES[name].set_alpha(256-(int(transparency)*255)//100)
             RESIZED[name]=IMAGES[name]
     print("Loaded Images")
-    print(IMAGES,RESIZED)
     return [IMAGES,RESIZED]
 
 def load_fonts():

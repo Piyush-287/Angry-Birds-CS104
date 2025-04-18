@@ -1,2 +1,3 @@
-AngryBirds,angrybirds-regular.ttf,64
-ShadowFight,Fighting_Spirit_2.ttf,64
+AngryBirds,angrybirds-regular.ttf,32
+ShadowFight,Fighting_Spirit_2.ttf,32
+ShadowFight,Fighting_Spirit_2.ttf,48

@@ -8,7 +8,7 @@ import pygame
 import pygame
 
 class Button:
-    def __init__(self,posn_pct,size, image, screen, on_click):
+    def __init__(self,posn_pct,size, image, screen, on_click,redraw_callback=None):
         """
         posn_pct: Tuple of (x_percentage, y_percentage) e.g. (0.5, 0.3)
         image: pygame.Surface (pre-loaded image)
@@ -22,6 +22,7 @@ class Button:
         self.size=size
         self.original_size=size
         self.scale_up=size *1.05
+        self.redraw_callback = redraw_callback
 
         # Get screen dimensions
         screen_width, screen_height = self.screen.get_size()
@@ -72,26 +73,28 @@ class Button:
         grow_size = self.scale_up
         grow_step = (grow_size - self.size) / (frames // 2)
 
-        # Grow
         for _ in range(frames // 2):
             self.size += grow_step
             self.update_center(self.screen)
+            if self.redraw_callback: self.redraw_callback()  # 🔥 redraw screen
             self.draw()
-            clock.tick(60)
             pygame.display.flip()
+            clock.tick(60)
 
-        # Shrink
         for _ in range(frames // 2):
             self.size -= grow_step
             self.update_center(self.screen)
+            if self.redraw_callback: self.redraw_callback()
             self.draw()
-            clock.tick(60)
             pygame.display.flip()
+            clock.tick(60)
 
-        # Reset just in case
         self.size = self.original_size
         self.update_center(self.screen)
+        if self.redraw_callback: self.redraw_callback()
         self.draw()
+        pygame.display.flip()
+
         
 def yo():
     print("Yo has been implemented")

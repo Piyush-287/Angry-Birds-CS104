@@ -8,3 +8,9 @@ CONTROLS,controls.png,0
 QUIT,quit.png,0
 CREDITS,credits.png,0
 SETTINGS,settings.png,0
+MOUNTAIN,Mountain.png,30
+RARROW,right-arrow.png,0
+LARROW,left-arrow.png,0
+GLASS,glass.png,40
+WOOD,wood.png,0
+STONE,STONE.png,0
