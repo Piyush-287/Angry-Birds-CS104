@@ -3,12 +3,18 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from load import *
-
+from Physics.config import * 
 def generate_background(Surface : pygame.Surface):
     global IMAGES
     if RESIZED["BACKGROUND_IMAGE"].get_size() != Surface.get_size():
         RESIZED["BACKGROUND_IMAGE"]=pygame.transform.scale(IMAGES["BACKGROUND_IMAGE"],Surface.get_size())
     Surface.blit(RESIZED["BACKGROUND_IMAGE"],(0,0),)
+
+def generate_mountains(Surface : pygame.Surface):
+    global IMAGES
+    if RESIZED["MOUNTAIN"].get_size() != Surface.get_size():
+        RESIZED["MOUNTAIN"]=pygame.transform.scale(IMAGES["MOUNTAIN"],Surface.get_size())
+    Surface.blit(RESIZED["MOUNTAIN"],(0,0),)
 
 if __name__=="__main__":
     import pygame
@@ -34,7 +40,8 @@ if __name__=="__main__":
     clock=pygame.time.Clock()
     IMAGES,RESIZED=load_images()
     ABIRD=Birds.Bird((10,470),1,(20,0))
-    SLINGSHOT=slingshot.slingshot((150,450))
+    RESIZED["LSLING"]=pygame.transform.scale_by(IMAGES["LSLING"],0.2)
+    SLINGSHOT=slingshot.slingshot((150,450),RESIZED["LSLING"])
     game = True
     while game:
         dt=clock.tick(TICKS)/1000
@@ -65,6 +72,7 @@ if __name__=="__main__":
         #Background 
         screen.fill(BG_COLOR)
         generate_background(screen)
+        generate_mountains(screen)
         ABIRD.draw(screen)
         SLINGSHOT.draw(screen)
         # display everything

@@ -7,43 +7,66 @@ if project_root not in sys.path:
 import pygame 
 import Utils
 from Physics.config import *
+VIRTUAL_SIZE=(1920,1080)
 class slingshot(pygame.sprite.Sprite):
-    def __init__(self,posn, *groups):
+    def __init__(self,posn,image,bird_size,screen_height,leftfacing, *groups):
+        self.dirn=leftfacing
         self.posn=posn
         self.enabled=False
-        self.image=pygame.Surface((20,40))
-        self.image.fill(Utils.colors.COLORS["green"])
-        self.rect=pygame.Rect(*posn,20,40)
+        self.image=image
+        self.bird_size=bird_size
+        self.screen_height=screen_height
+        self.rect=self.image.get_rect(topleft=posn)
         self.traj=list()
+        self.prev_mouse_posn=(self.rect.center[0],self.rect.center[1]-0.35*self.rect.height)
         super().__init__(*groups)
-
     def enable(self,mouse_posn):
         if self.rect.collidepoint(*mouse_posn):
             self.gettraj(mouse_posn)
             self.enabled=True
         return self.enabled
     def launchvel(self,mouse_posn):
+        if mouse_posn[1]+self.bird_size[1] > self.screen_height -200:
+            mouse_posn=(mouse_posn[0],self.prev_mouse_posn[1])
+        else : self.prev_mouse_posn=mouse_posn
         self.enabled=False
         self.gettraj(mouse_posn)
-        return (-mouse_posn[0]+self.rect.center[0],-mouse_posn[1]+self.rect.center[1])
+        return ((-mouse_posn[0]+self.rect.center[0])*0.7,(-mouse_posn[1]+self.rect.center[1]-0.35*self.rect.height))
     def draw(self,screen:pygame.surface.Surface):
         screen.blit(self.image,self.posn)
         if self.enabled:
-            print("entered here")
-            for point in self.traj:
-                pygame.draw.circle(screen,Utils.colors.COLORS["gray"],point,2)
-            print(self.traj)
+            if self.dirn:
+                pygame.draw.line(screen,"black",self.prev_mouse_posn,(int(self.rect.x+self.rect.width*0.215),int(self.rect.y+self.rect.height*0.165)),10)
+                pygame.draw.line(screen,"black",self.prev_mouse_posn,(int(self.rect.x+self.rect.width*0.833),int(self.rect.y+self.rect.height*0.182)),10)
+            else:
+                pygame.draw.line(screen,"black",self.prev_mouse_posn,(int(self.rect.x+self.rect.width*0.833),int(self.rect.y+self.rect.height*0.165)),10)
+                pygame.draw.line(screen,"black",self.prev_mouse_posn,(int(self.rect.x+self.rect.width*0.215),int(self.rect.y+self.rect.height*0.182)),10)
+            for i, point in enumerate(self.traj):
+                alpha = int(255- 255 * (i / len(self.traj)))  
+                radius = int(5 * ((7-i) / len(self.traj))) + 1
+                color = (255, 255, 255, alpha)
+
+                fade_surf = pygame.Surface((radius*2, radius*2), pygame.SRCALPHA)
+                pygame.draw.circle(fade_surf, color, (radius, radius), radius)
+                screen.blit(fade_surf, (point[0]-radius, point[1]-radius))
     
     def gettraj(self,mouse_posn):
+        if mouse_posn[1]+self.bird_size[1] > VIRTUAL_SIZE[1] -200:
+            mouse_posn=(mouse_posn[0],self.prev_mouse_posn[1])
+        else : self.prev_mouse_posn=mouse_posn
         self.traj.clear()
-        vx,vy=(-mouse_posn[0]+self.rect.center[0],-mouse_posn[1]+self.rect.center[1])
+        vx,vy=((-mouse_posn[0]+self.rect.center[0])*0.7,(-mouse_posn[1]+self.rect.center[1]-0.35*self.rect.height))
         x,y=mouse_posn[0],mouse_posn[1]
-        for i in range(10):
-            x+=vx * METER *0.1
-            y+=vy * METER *0.1
-            vy += GRAVITY *0.1
+        x+=vx * METER *0.07
+        y+=vy * METER *0.07
+        vy += GRAVITY *0.07
+        for i in range(7):
+            x+=vx * METER *0.07
+            y+=vy * METER *0.07
+            vy += GRAVITY *0.07
             self.traj.append((x,y))
 
     def update(self,mouse_posn, *args, **kwargs):
         self.gettraj(mouse_posn)
-        return super().update(*args, **kwargs)
+        super().update(*args, **kwargs)
+        return ((-mouse_posn[0]+self.rect.center[0])*0.7,(-mouse_posn[1]+self.rect.center[1]-0.35*self.rect.height))
