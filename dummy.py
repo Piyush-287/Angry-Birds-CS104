@@ -39,8 +39,6 @@ def clamp_camera():
     screen_w, screen_h = screen.get_size()
     visible_width = screen_w / zoom
     visible_height = screen_h / zoom
-
-    # Clamp offset so the camera doesn’t go out of bounds
     target_offset.x = max(0, min(world_size.x - visible_width, target_offset.x))
     target_offset.y = max(0, min(world_size.y - visible_height, target_offset.y))
 

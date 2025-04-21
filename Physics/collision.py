@@ -1,6 +1,10 @@
 import pygame
 import random 
-
+import sys, os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+# import Entities.Birds as entity
 def detect_line_circle_collision(circle : tuple,line: tuple,vel:pygame.Vector2):
     center : pygame.Vector2=circle[0]
     upadated_center : pygame.Vector2=circle[0]+vel 
@@ -128,92 +132,136 @@ def update_lines_circle_collision(points: list,circle: tuple,circle_vel,e: float
             return circle,circle_vel
     return circle,circle_vel
 
-if __name__ == "__main__":
-    from collections import deque
-    pygame.init()
+# if __name__ == "__main__":
+#     from collections import deque
+#     pygame.init()
 
-    # --- SCREEN SETUP ---
-    WIDTH, HEIGHT = 800, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Ball + Line Collision Test")
-    clock = pygame.time.Clock()
+#     # --- SCREEN SETUP ---
+#     WIDTH, HEIGHT = 800, 600
+#     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+#     pygame.display.set_caption("Ball + Line Collision Test")
+#     clock = pygame.time.Clock()
 
-    # --- BALL PROPERTIES ---
-    ball_radius = 15
-    ball_pos = pygame.Vector2(100, 100)
-    ball_vel = pygame.Vector2(4, 3)
-    restitution = 0.9  # bounciness
+#     # --- BALL PROPERTIES ---
+#     ball_radius = 15
+#     ball_pos = pygame.Vector2(100, 100)
+#     ball_vel = pygame.Vector2(4, 3)
+#     restitution = 0.9  # bounciness
 
-    # --- LINE SEGMENTS ---
-    line_points = [pygame.Vector2(WIDTH / 10 * i - 10, random.randint(400, HEIGHT)) for i in range(10)]
-    line_points.append(pygame.Vector2(WIDTH + 40, random.randint(400, HEIGHT)))
+#     # --- LINE SEGMENTS ---
+#     line_points = [pygame.Vector2(WIDTH / 10 * i - 10, random.randint(400, HEIGHT)) for i in range(10)]
+#     line_points.append(pygame.Vector2(WIDTH + 40, random.randint(400, HEIGHT)))
 
-    # --- FRAME HISTORY ---
-    frame_history = deque(maxlen=30)  # stores (ball_pos, ball_vel)
-    current_frame_index = -1
-    paused = False
-    step_mode = False
+#     # --- FRAME HISTORY ---
+#     frame_history = deque(maxlen=30)  # stores (ball_pos, ball_vel)
+#     current_frame_index = -1
+#     paused = False
+#     step_mode = False
 
-    # --- GAME LOOP ---
-    running = True
-    while running:
-        screen.fill((30, 30, 30))
+#     # --- GAME LOOP ---
+#     running = True
+#     while running:
+#         screen.fill((30, 30, 30))
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    paused = not paused
-                    if paused:
-                        step_mode = True
-                        current_frame_index = len(frame_history) - 1
-                    else:
-                        step_mode = False
+#             elif event.type == pygame.KEYDOWN:
+#                 if event.key == pygame.K_SPACE:
+#                     paused = not paused
+#                     if paused:
+#                         step_mode = True
+#                         current_frame_index = len(frame_history) - 1
+#                     else:
+#                         step_mode = False
 
-                elif paused and event.key == pygame.K_LEFT:
-                    if current_frame_index > 0:
-                        current_frame_index -= 1
+#                 elif paused and event.key == pygame.K_LEFT:
+#                     if current_frame_index > 0:
+#                         current_frame_index -= 1
 
-                elif paused and event.key == pygame.K_RIGHT:
-                    if current_frame_index < len(frame_history) - 1:
-                        current_frame_index += 1
+#                 elif paused and event.key == pygame.K_RIGHT:
+#                     if current_frame_index < len(frame_history) - 1:
+#                         current_frame_index += 1
 
-        if not paused:
-            # --- Simulation Advance ---
-            ball_pos += ball_vel
-            ball_vel += pygame.Vector2(0, 1)  # gravity
+#         if not paused:
+#             # --- Simulation Advance ---
+#             ball_pos += ball_vel
+#             ball_vel += pygame.Vector2(0, 1)  # gravity
 
-            if ball_pos.x - ball_radius <= 0 or ball_pos.x + ball_radius >= WIDTH:
-                ball_vel.x *= -1
-            if ball_pos.y - ball_radius <= 0 or ball_pos.y + ball_radius >= HEIGHT:
-                ball_vel.y *= -1
+#             if ball_pos.x - ball_radius <= 0 or ball_pos.x + ball_radius >= WIDTH:
+#                 ball_vel.x *= -1
+#             if ball_pos.y - ball_radius <= 0 or ball_pos.y + ball_radius >= HEIGHT:
+#                 ball_vel.y *= -1
 
-            (ball_pos, ball_radius), ball_vel = update_lines_circle_collision(
-                line_points, (ball_pos, ball_radius), ball_vel, restitution
-            )
+#             (ball_pos, ball_radius), ball_vel = update_lines_circle_collision(
+#                 line_points, (ball_pos, ball_radius), ball_vel, restitution
+#             )
 
-            # Store frame
-            frame_history.append((ball_pos.copy(), ball_vel.copy()))
-            current_frame_index = len(frame_history) - 1
+#             # Store frame
+#             frame_history.append((ball_pos.copy(), ball_vel.copy()))
+#             current_frame_index = len(frame_history) - 1
 
-        elif step_mode:
-            if 0 <= current_frame_index < len(frame_history):
-                ball_pos, ball_vel = frame_history[current_frame_index]
+#         elif step_mode:
+#             if 0 <= current_frame_index < len(frame_history):
+#                 ball_pos, ball_vel = frame_history[current_frame_index]
 
-        # --- Draw Ball and Lines ---
-        pygame.draw.circle(screen, (0, 200, 255), ball_pos, ball_radius)
-        for i in range(len(line_points) - 1):
-            pygame.draw.line(screen, (255, 255, 0), line_points[i], line_points[i + 1], 4)
+#         # --- Draw Ball and Lines ---
+#         pygame.draw.circle(screen, (0, 200, 255), ball_pos, ball_radius)
+#         for i in range(len(line_points) - 1):
+#             pygame.draw.line(screen, (255, 255, 0), line_points[i], line_points[i + 1], 4)
 
-        # Optional: show paused state
-        if paused:
-            font = pygame.font.SysFont(None, 36)
-            msg = font.render("PAUSED - ←/→ to step, SPACE to resume", True, (255, 255, 255))
-            screen.blit(msg, (20, 20))
+#         # Optional: show paused state
+#         if paused:
+#             font = pygame.font.SysFont(None, 36)
+#             msg = font.render("PAUSED - ←/→ to step, SPACE to resume", True, (255, 255, 255))
+#             screen.blit(msg, (20, 20))
 
-        pygame.display.flip()
-        clock.tick(60)
+#         pygame.display.flip()
+#         clock.tick(60)
 
-    pygame.quit()
+#     pygame.quit()
+
+class Block():
+    def __init__(self,type):
+        self.type=type
+def check(Tower,Visited,width,height):
+    queue =list()
+    for x in range(width):
+        if Tower[0][x].type!=0:
+            Visited[0][x] = True
+            queue.append((0, x))
+    while queue:
+        y, x = queue.pop(0)
+        for dy, dx in [(0, -1), (0, -1), (1, 0),(0,1)]:
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < height and 0 <= nx < width and not Visited[ny][nx] and Tower[ny][nx].type !=0 :
+                Visited[ny][nx] = True
+                queue.append((ny, nx))
+    return Visited
+
+def tower_check(Surface: pygame.Surface, tower: list[list[Block]]) -> None:
+    height = len(tower)
+    width = len(tower[0]) if height > 0 else 0
+    stable = [[False for _ in range(width)] for _ in range(height)]
+    stable = check(tower,stable,width,height)
+    updated_blocks=list()
+    for x in range(width):
+        last_stable=-1
+        for y in range(height-1,-1,-1):
+            if stable[y][x]==True:
+                last_stable=y
+                break
+        for y in range(last_stable+1,height):
+            if tower[y][x].type != 0:
+                last_stable += 1
+                block_to_fall = tower[y][x]
+                fall_distance = (y - last_stable) * block_to_fall.size[1]
+                block_to_fall.target_posn = [
+                    block_to_fall.posn[0],
+                    block_to_fall.posn[1] + fall_distance
+                ]
+                block_to_fall.falling = True
+                print(block_to_fall.posn,block_to_fall.target_posn)
+                tower[last_stable][x], tower[y][x] = tower[y][x], tower[last_stable][x]
+    return tower

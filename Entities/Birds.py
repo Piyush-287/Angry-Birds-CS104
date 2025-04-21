@@ -14,9 +14,11 @@ class Bird(pygame.sprite.Sprite):
     def __init__(self,posn,vel=(0,0),*groups):
         self.x,self.y=posn[0],posn[1]
         self.vx,self.vy=vel[0],vel[1]
+        self.index=0
         self.xm,self.ym=self.x/Physics.config.METER,self.y/Physics.config.METER
         self.prev_x,self.prev_y=self.xm,self.ym
         self.radius=20
+        self.type=0
         self.damage={
             1:10,
             2:10,
@@ -24,6 +26,7 @@ class Bird(pygame.sprite.Sprite):
         }
         self.image=pygame.Surface((20,20))
         self.image.fill(Utils.colors.COLORS["red"])
+        self.playing_image=self.image
         self.rect=self.image.get_rect()
         super().__init__(*groups)
     
@@ -107,6 +110,16 @@ class Red(Bird):
             3:20
         }
         self.image=load.RESIZED["RED"]
+        self.playing_image=self.image
+        self.type=1
+    def update_animation(self, *args, **kwargs):
+        self.index+=1
+        if self.index>=100:self.index=0
+        if (self.index//10)%3==0:
+            self.playing_image=load.SPRITE["RED"][1]
+        elif (self.index//20)==0:
+            self.playing_image=load.SPRITE["RED"][2]
+        else :self.playing_image=load.SPRITE["RED"][0]
     def draw(self, screen):
         super().draw(screen)
 class Blues(Bird):
@@ -120,6 +133,16 @@ class Blues(Bird):
             3:5
         }
         self.image=load.RESIZED["BLUES"]
+        self.playing_image=self.image
+        self.type=2
+    def update_animation(self, *args, **kwargs):
+        self.index+=1
+        if self.index>=100:self.index=0
+        if (self.index//10)==9:
+            self.playing_image=load.SPRITE["BLUES"][3]
+        elif (self.index//20)==1:
+            self.playing_image=load.SPRITE["BLUES"][2]
+        else :self.playing_image=load.SPRITE["BLUES"][0]
     def draw(self, screen):
         super().draw(screen)
 class Bomb(Bird):
@@ -133,6 +156,16 @@ class Bomb(Bird):
             3:40
         }
         self.image=load.RESIZED["BOMB"]
+        self.image=self.image
+        self.type=3
+    def update_animation(self, *args, **kwargs):
+        self.index+=1
+        if self.index>=100:self.index=0
+        if (self.index//10)%3==0:
+            self.playing_image=load.SPRITE["BOMB"][1]
+        elif (self.index//20)==0:
+            self.playing_image=load.SPRITE["BOMB"][2]
+        else :self.playing_image=load.SPRITE["BOMB"][0]
     def draw(self, screen):
         super().draw(screen)
 class Chuck(Bird):
@@ -146,6 +179,16 @@ class Chuck(Bird):
             3:5
         }
         self.image=load.RESIZED["CHUCK"]
+        self.playing_image=self.image
+        self.type=4
+    def update_animation(self, *args, **kwargs):
+        self.index+=1
+        if self.index>=100:self.index=0
+        if (self.index//10)%3==0:
+            self.playing_image=load.SPRITE["CHUCK"][1]
+        elif (self.index//20)==0:
+            self.playing_image=load.SPRITE["CHUCK"][2]
+        else :self.playing_image=load.SPRITE["CHUCK"][0]
     def draw(self, screen):
         super().draw(screen)
 
@@ -160,6 +203,16 @@ class Stella(Bird):
             3:10,
         }
         self.image=load.RESIZED["STELLA"]
+        self.playing_image=self.image
+        self.type=5
+    def update_animation(self, *args, **kwargs):
+        self.index+=1
+        if self.index>=100:self.index=0
+        if (self.index//10)%3==0:
+            self.playing_image=load.SPRITE["STELLA"][1]
+        elif (self.index//20)==0:
+            self.playing_image=load.SPRITE["STELLA"][2]
+        else :self.playing_image=load.SPRITE["STELLA"][0]
     def draw(self, screen):
         super().draw(screen)
 
@@ -168,11 +221,20 @@ Block_Types={
     2: "GLASS",
     3: "STONE"
 }
+DAMAGE_FALLING={
+    1:1.5,
+    2:2.5,
+    3:0.8
+}
 
 class Block(pygame.sprite.Sprite):
     def __init__(self,posn,size,type,*groups):
         self.health=100
-        self.posn=posn
+        self.posn=list(posn)
+        self.target_posn = list(posn)
+        self.falling = False
+        self.gravity = Physics.config.GRAVITY * 100
+        self.velocity = 0
         self.size=size
         self.type=type
         if self.type!=0:
@@ -181,6 +243,21 @@ class Block(pygame.sprite.Sprite):
         else:
             self.image=None
         super().__init__(*groups)
+    
+    def update(self,dt, *args, **kwargs):
+        if self.falling:
+            self.velocity += self.gravity * dt
+            self.posn[1] += self.velocity * dt
+
+            if self.posn[1] >= self.target_posn[1]:
+                self.posn[1] = self.target_posn[1]
+                self.falling = False
+                self.health-=self.velocity/100 * DAMAGE_FALLING[self.type]
+                self.velocity = 0
+                if self.health < 0 :
+                    return False
+                print(self.health)
+        return True
     
     def update_collision(self,bird:Bird):
         colnno=bird.collision_check(self)
@@ -194,5 +271,3 @@ class Block(pygame.sprite.Sprite):
         return False,False
     def draw(self,screen:pygame.Surface):
         if self.type!=0 :screen.blit(self.image,self.posn)
-
-            
