@@ -35,6 +35,40 @@ STATE={
     "selected_bird":None,
     "selected_rect":None
 }
+def cont():return 1
+def save_data():return 3
+def restart():return 2 
+def paused(surface,screen,scale_factor):
+    Buttons=[
+        Button((0.4,0.1),0.2,IMAGES["CONTINUE"],screen,cont),
+        Button((0.4,0.3),0.2,IMAGES["RESTART"],screen,restart),
+        Button((0.4,0.5),0.2,IMAGES["CONTROLS_1"],screen,cont),
+        Button((0.4,0.7),0.2,IMAGES["SAVE"],screen,save_data)
+    ] 
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button==1:
+                    mouse=pygame.mouse.get_pos()
+                    for button in Buttons:
+                        clicked,result=button.check_click(mouse)
+                        if clicked:
+                            return result
+
+        size = surface.get_size()
+        scaled_down = pygame.transform.smoothscale(surface, 
+            (int(size[0] * scale_factor), int(size[1] * scale_factor)))
+        blurred= pygame.transform.smoothscale(scaled_down, size)
+        screen.fill((100, 100, 255))
+        # Blit to screen
+        display_zoomed(screen,blurred,0,0,1,True)
+        for button in Buttons:
+            button.update(screen)
+            button.draw()
+        pygame.display.flip()
+        clock.tick(60)
 def display_zoomed(screen, Surface, offset_x, offset_y, zoom, player1turn):
     screen_width, screen_height = screen.get_size()
     scale_x = zoom * screen_width / VIRTUAL_SIZE[0]
@@ -79,10 +113,33 @@ def initialise_tower(Design:list,size:tuple,surface:pygame.Surface,location,left
     for j in range(size[1]):
         Layer=list()
         for i in range(size[0]):
-            posn=(location[0]+i*per_tile_area,surface.get_height()-BASE_LOC-(j+1)*per_tile_area)
-            Layer.append(Block(posn,(per_tile_area,per_tile_area),Design[j*size[0]+(i if leftside else size[0]-i-1)]))
+            if leftside:
+                x_pos = location[0] + i * per_tile_area
+            else:
+                x_pos = location[1] - (i + 1) * per_tile_area 
+            y_pos = surface.get_height() - BASE_LOC - (j + 1) * per_tile_area
+            posn = (x_pos, y_pos)
+            index = j * size[0] + i
+            block = Block(posn, (per_tile_area, per_tile_area), Design[index][0])
+            block.health = Design[index][1]
+            Layer.append(block)
         Tower.append(Layer)
     return Tower
+
+def initialize(screen,location):
+    with open("Data/lastgame.txt", "r") as file:lines = file.readlines()
+    player_data = eval(lines[0].strip())
+    left_list_types = eval(lines[1].strip())
+    left_list=[get_bird(True,no) for no in left_list_types]
+    right_list_types = eval(lines[2].strip())
+    right_list=[get_bird(False,no) for no in right_list_types]
+    tower_left_data = eval(lines[3].strip())
+    tower_left=initialise_tower(tower_left_data,Sizes[player_data[2]],screen,location[0],True)
+    tower_right_data = eval(lines[4].strip())
+    tower_right=initialise_tower(tower_right_data,Sizes[player_data[3]],screen,location[1],False)
+    STATE["player1turn"]=eval(lines[5].strip())
+    return player_data,left_list,right_list,tower_left,tower_right
+
 def draw_tower(Tower,Surface):
     for layer in Tower:
         for tile in layer:
@@ -146,7 +203,16 @@ def get_bird(leftside,no):
         case 3: return Bomb(((0.25 if leftside else 0.75)*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-BASE_LOC-10),(0,0))
         case 4: return Chuck(((0.25 if leftside else 0.75)*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-BASE_LOC-10),(0,0))
         case 5: return Stella(((0.25 if leftside else 0.75)*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-BASE_LOC-10),(0,0)) 
-def main_game(screen,clock,player_data):
+def main_game(screen,clock):
+    def save_data():
+        with open("Data/lastgame.txt","w") as file:
+            file.write(str(player_data)+"\n")
+            file.write(str([bird.type for bird in left_list])+"\n")
+            file.write(str([bird.type for bird in right_list])+"\n")
+            file.write(str([(block.type,block.health) for layer in Tower_left for block in layer])+"\n")
+            file.write(str([(block.type,block.health) for layer in Tower_right for block in layer])+"\n")
+            file.write(str(STATE["player1turn"]))
+
     def change_chances():
         nonlocal left_list,right_list,anim
         global STATE
@@ -164,27 +230,8 @@ def main_game(screen,clock,player_data):
     RESIZED["RSLING"]=pygame.transform.scale_by(IMAGES["RSLING"],0.15)
     Left_Sling=slingshot((0.25*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["LSLING"].get_size()[1]-195),RESIZED["LSLING"],(10,10),Surface.get_size()[1],True)
     Right_SLing=slingshot((0.75*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["RSLING"].get_size()[1]-195),RESIZED["RSLING"],(10,10),Surface.get_size()[1],False)
-    STATE["player1turn"]=True
-    Tower_left,Tower_left_size,Tower_right,Tower_right_size=Designs[player_data[2]],Sizes[player_data[2]],Designs[player_data[3]],Sizes[player_data[3]]
-    Tower_left=initialise_tower(Tower_left,Tower_left_size,Surface,(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),True)
-    Tower_right=initialise_tower(Tower_right,Tower_right_size,Surface,(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0]),False)
-    left_list=[
-        Red((0.25*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Chuck((0.25*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Bomb((0.25*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Blues((0.25*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Stella((0.25*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0))
-    ]
-    right_list=[
-        Red((0.5*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Chuck((0.5*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Bomb((0.5*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Blues((0.5*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0)),
-        Stella((0.5*Surface.get_width(),Surface.get_height()-BASE_LOC-10),(0,0))    
-    ]
-    random.shuffle(left_list)
-    random.shuffle(right_list)
-    anim = display_animation_of_choosing(screen, True, left_list)
+    player_data,left_list,right_list,Tower_left,Tower_right=initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])])
+    anim = display_animation_of_choosing(screen, STATE["player1turn"], left_list if STATE["player1turn"] else right_list)
     time_wait=-1
     selection_ui_boxes:list[pygame.Rect]=[]
     curr_bird=None
@@ -197,12 +244,37 @@ def main_game(screen,clock,player_data):
         mouse_posn = screen_to_virtual(mouse_posn_screen, (screen_width, screen_height), VIRTUAL_SIZE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                game = False
+                save_data()
+                game=False
             if event.type == pygame.KEYDOWN:
-                if event.key==pygame.K_SPACE:
-                    STATE["offset_x"],STATE["offset_y"]=0,0
-                    STATE["target_zoom"]=1
-                    STATE["zoomed"]=False
+                match event.key:
+                    case pygame.K_SPACE:
+                        STATE["offset_x"],STATE["offset_y"]=0,0
+                        STATE["target_zoom"]=1
+                        STATE["zoomed"]=False
+                    case pygame.K_ESCAPE:
+                        match paused(Surface,screen,0.02):
+                            case 0:
+                                game=False
+                            case 1:
+                                continue
+                            case 2:
+                                with open("data/lastgame.txt","r") as file:lines=file.readlines()
+                                list1,list2=eval(lines[1]),eval(lines[2])
+                                random.shuffle(list1)
+                                random.shuffle(list2)
+                                lines[1]=str(list1)+"\n"
+                                lines[2]=str(list2)+"\n"
+                                with open("data/lastgame.txt","w") as file:file.writelines(lines)
+                                return 1
+                            case 3:
+                                save_data()
+                                game=False
+                    case pygame.K_s:
+                        if curr_bird is not None and STATE["birdlaunched"]:
+                            curr_bird.activate(Surface,Tower_right if STATE["player1turn"] else Tower_left,Tower_left if STATE["player1turn"] else Tower_right)
+                    case _:
+                        pass
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button==1:
                     if STATE["selected_bird"] and STATE["selected_rect"]:
@@ -278,6 +350,12 @@ def main_game(screen,clock,player_data):
                             if SETTINGS["autozoom"]:
                                 STATE["target_zoom"]=SETTINGS["default_zoom"]
                                 STATE["zoomed"]=True
+                            if all(block.type==0 or block.health<=0 for layer in Tower_left for block in layer):
+                                print(player_data[1],"won")
+                                paused(Surface,screen,0.01)
+                            if all(block.type==0 or block.health<=0 for layer in Tower_right for block in layer):
+                                print(player_data[0],"won")
+                                paused(Surface,screen,0.01)
                         break
                 else :continue
                 break
@@ -294,9 +372,6 @@ def main_game(screen,clock,player_data):
             for i in range(len(layer)):
                 if layer[i].update(dt)==False:
                     layer[i]=Block(layer[i].posn,layer[i].size,0)
-                    
-
-        # Draw on surface
         generate_background(Surface)
         generate_mountains(Surface)
         draw_tower(Tower_left,Surface)
@@ -310,12 +385,11 @@ def main_game(screen,clock,player_data):
         if STATE["zoom"] == 1:
             STATE["zoomed"]=False
         display_zoomed(screen,Surface,STATE["offset_x"],STATE["offset_y"],STATE["zoom"],not to_update_for)
-        pygame.draw.circle(screen,"red",pygame.mouse.get_pos(),3)
         try:
             selection_ui_boxes=next(anim)
         except StopIteration:
             pass
         pygame.display.flip()
 if __name__=="__main__":
-    main_game(screen,clock,[0,1,11,1])
+    main_game(screen,clock)
     pygame.quit()

@@ -27,7 +27,7 @@ class Button:
         self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
 
         # Get image rect and center it at (x, y)
-        self.image=pygame.transform.scale(self.original_image,(self.width,self.height))
+        self.image=pygame.transform.smoothscale(self.original_image,(self.width,self.height))
         self.rect = self.image.get_rect(topleft=(self.x, self.y))
 
     def draw(self):

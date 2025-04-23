@@ -21,3 +21,10 @@ BLUES,Blues.png,0,4,1
 BOMB,bomb.png,0,8,1
 CHUCK,chuck.png,0,5,1
 STELLA,stella.png,0,8,1
+CONTINUE,Continue.png,0,0,50
+RESTART,Restart.png,0,0,50
+CONTROLS_1,Controls_paused_screen.png,0,0,50
+SAVE,saveandexit.png,0,0,50
+SUPER_RED,super_red.png,0,0,0
+SUPER_CHUCK,super_chuck.png,0,0,0
+SUPER_STELLA,stella_super.png,0,0,0

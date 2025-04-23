@@ -20,7 +20,13 @@ while game:
         case 1:
             data=PlayerData.get_player_data()
             if data:
-                main_game.main_game(screen,clock,data)
+                x=main_game.main_game(screen,clock)
+                while x==1:
+                    x=main_game.main_game(screen,clock)
+        case 2:
+            x=main_game.main_game(screen,clock)
+            while x==1:
+                x=main_game.main_game(screen,clock)
         case _:
             print("idk what you choosed")
 pygame.quit()

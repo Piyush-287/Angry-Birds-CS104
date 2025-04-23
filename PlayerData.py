@@ -5,7 +5,11 @@ from Scenes.UI.main_menu import *
 from Entities.Button import *
 from load import *
 from Physics.config import * 
+import random
 pygame.init()
+BIRDS=[
+
+]
 BASE_LOC=200
 def display_tower(screen:pygame.surface,curr,size):
     Blocks={
@@ -201,6 +205,16 @@ def get_player_data():
         clock.tick(60)
     Player2,Tower2=get_input("Player2")
     if not Player2:return False
+    with open("Data/lastgame.txt","w") as file:
+        file.write(str([Player1,Player2,Tower1,Tower2])+"\n")
+        nos=[1,2,3,4,5]
+        random.shuffle(nos)
+        file.write(str(nos)+"\n")
+        random.shuffle(nos)
+        file.write(str(nos)+"\n")
+        file.write(str([(tile,100) for tile in Designs[Tower1]])+"\n")
+        file.write(str([(tile,100) for tile in Designs[Tower2]])+"\n")
+        file.write("True")
     return [Player1,Player2,Tower1,Tower2]
 
 if __name__=="__main__":

@@ -9,6 +9,7 @@ import Physics
 import load
 import math
 BASE_LOC=200
+SCALING_DAMAGE_FACTOR=0.02
 
 class Bird(pygame.sprite.Sprite):
     def __init__(self,posn,vel=(0,0),*groups):
@@ -110,8 +111,6 @@ class Bird(pygame.sprite.Sprite):
             self.vy*=(-1 *Physics.config.E)
             return 2
         return 0
-        
-
 class Red(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
@@ -135,11 +134,17 @@ class Red(Bird):
         else :self.playing_image=load.SPRITE["RED"][0]
     def draw(self, screen):
         super().draw(screen)
+    def activate(self,screen,Tower,selfTower):
+        self.damage={
+            1:30,2:30,3:30
+        }
+        load.RESIZED["SUPER_RED"]=pygame.transform.scale_by(load.IMAGES["SUPER_RED"],self.radius*4/load.IMAGES["SUPER_RED"].get_size()[0])
+        self.image=load.RESIZED["SUPER_RED"]
 class Blues(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
         self.radius=15
-        load.RESIZED["BLUES"]=pygame.transform.scale_by(load.SPRITE["BLUES"][0],self.radius*2/load.SPRITE["BLUES"][0].get_size()[0])
+        load.RESIZED["BLUES"]=pygame.transform.scale_by(load.SPRITE["BLUES"][0],self.radius*4/load.SPRITE["BLUES"][0].get_size()[0])
         self.damage={
             1:5,
             2:40,
@@ -148,6 +153,8 @@ class Blues(Bird):
         self.image=load.RESIZED["BLUES"]
         self.playing_image=self.image
         self.type=2
+        self.activated=False
+        self.mini_blues=[]
     def update_animation(self, *args, **kwargs):
         self.index+=1
         if self.index>=100:self.index=0
@@ -156,8 +163,22 @@ class Blues(Bird):
         elif (self.index//20)==1:
             self.playing_image=load.SPRITE["BLUES"][2]
         else :self.playing_image=load.SPRITE["BLUES"][0]
+    def update(self, dt, surface, *args, **kwargs):
+        if self.activated:
+            for blue in self.mini_blues:
+                blue.update(dt,surface)
+        return super().update(dt, surface, *args, **kwargs)
     def draw(self, screen):
+        if self.activated:
+            for blue in self.mini_blues:
+                blue.draw(screen)
         super().draw(screen)
+    def activate(self,screen,Tower,SelfTower):
+        self.activated=True
+        self.mini_blues=[
+            Blues((self.x,self.y),(self.vx,self.vy+10)),
+            Blues((self.x,self.y),(self.vx,self.vy-10))
+        ]
 class Bomb(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
@@ -168,9 +189,13 @@ class Bomb(Bird):
             2:5,
             3:40
         }
+        self.Tower=None
+        self.visited=None
         self.image=load.RESIZED["BOMB"]
         self.image=self.image
         self.type=3
+        self.time=0
+        self.activated=False
     def update_animation(self, *args, **kwargs):
         self.index+=1
         if self.index>=100:self.index=0
@@ -180,7 +205,28 @@ class Bomb(Bird):
             self.playing_image=load.SPRITE["BOMB"][2]
         else :self.playing_image=load.SPRITE["BOMB"][0]
     def draw(self, screen):
+        if self.activated and self.time<15:
+            self.time+=1
+            circle_surface = pygame.Surface((self.time*30, self.time*30), pygame.SRCALPHA)
+            alpha = max(0, 255 - self.time * 10)
+            color = (0, 0, 0, alpha)
+            pygame.draw.circle(circle_surface, color, (self.time*15, self.time*15), self.time * 15)
+            screen.blit(circle_surface, (self.x - self.time*15, self.y - self.time*15))
         super().draw(screen)
+    def update(self, dt, surface, *args, **kwargs):
+        if self.activated:
+            for i in range(len(self.Tower)):
+                for j in range(len(self.Tower[0])):
+                    if not self.visited[i][j]:
+                        self.visited[i][j]=True 
+                        distance=math.dist((self.x,self.y),self.Tower[i][j].posn)
+                        if distance!=0 :self.Tower[i][j].health -= 2500000/(distance**2)
+        return super().update(dt, surface, *args, **kwargs)
+    def activate(self,screen,Tower,SelfTower):
+        self.Tower=Tower
+        self.visited=[[False for _ in range(len(self.Tower[0]))] for _ in range(len(self.Tower))]
+        self.image=pygame.transform.scale_by(load.SPRITE["BOMB"][5],self.radius*2/load.SPRITE["BOMB"][5].get_size()[0])
+        self.activated=True
 class Chuck(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
@@ -204,20 +250,27 @@ class Chuck(Bird):
         else :self.playing_image=load.SPRITE["CHUCK"][0]
     def draw(self, screen):
         super().draw(screen)
-
+    def activate(self,screen,Tower,Selftower):
+        self.vx += min(self.vx,100)
+        load.RESIZED["SUPER_CHUCK"]=pygame.transform.scale_by(load.IMAGES["SUPER_CHUCK"],self.radius*2/load.IMAGES["SUPER_CHUCK"].get_size()[0])
+        self.image=load.RESIZED["SUPER_CHUCK"]
 class Stella(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
+        self.Tower=None
         self.radius=15
-        load.RESIZED["STELLA"]=pygame.transform.scale_by(load.SPRITE["STELLA"][0],self.radius*2/load.SPRITE["STELLA"][0].get_size()[0])
+        load.RESIZED["STELLA"]=pygame.transform.scale_by(load.SPRITE["STELLA"][0],self.radius*4/load.SPRITE["STELLA"][0].get_size()[0])
         self.damage={
             1:15,
             2:20,
             3:5,
         }
+        self.healed_list=[]
         self.image=load.RESIZED["STELLA"]
         self.playing_image=self.image
         self.type=5
+        self.absorbed=0
+        self.activated=False
     def update_animation(self, *args, **kwargs):
         self.index+=1
         if self.index>=100:self.index=0
@@ -226,8 +279,61 @@ class Stella(Bird):
         elif (self.index//20)==0:
             self.playing_image=load.SPRITE["STELLA"][2]
         else :self.playing_image=load.SPRITE["STELLA"][0]
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface):
+        for block in self.healed_list:
+            if block[2] >0:
+                pygame.draw.rect(screen,"pink",(block[0],block[1]),3)
+                block[2] -= 1
         super().draw(screen)
+    def activate(self,screen,Tower,SelfTower):
+        self.activated=True
+        self.Tower=SelfTower
+        self.image=pygame.transform.scale_by(load.IMAGES["SUPER_STELLA"],self.radius*4/load.IMAGES["SUPER_STELLA"].get_size()[0])
+
+    def update(self, dt, surface, *args, **kwargs):
+        if self.absorbed > 0:
+            minm=100
+            minm_block=None
+            for layer in self.Tower:
+                for block in layer:
+                    if block.type>0 and 0<block.health<minm:
+                        minm_block=block
+                        minm=block.health
+            if minm_block is not None:
+                if self.absorbed < minm_block.health:
+                    minm_block.health += self.absorbed
+                    self.absorbed=0
+                else:
+                    self.absorbed-= (100-minm_block.health)
+                    minm_block.health=100
+                self.healed_list.append([minm_block.posn,minm_block.size,20])
+
+        return super().update(dt, surface, *args, **kwargs)
+    def collision_check(self,block):
+        if (block.posn[1]-self.radius < self.y < block.posn[1] + block.size[1]+self.radius and (self.prev_x<block.posn[0] - self.radius< self.x and self.vx > 0)):
+            self.x=block.posn[0]-2*self.radius
+            self.xm=self.x/Physics.config.METER
+            if self.activated:
+                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+            self.vx*=(-1 *Physics.config.E)
+            self.vy*=Physics.config.FRICTION
+            return 1
+        if (block.posn[1]-self.radius < self.y < block.posn[1] + block.size[1]+self.radius and (self.prev_x>block.posn[0] + block.size[0] - self.radius> self.x and self.vx < 0)):
+            self.x=block.posn[0] + block.size[0] + 2*self.radius
+            self.xm=self.x/Physics.config.METER
+            if self.activated:
+                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+            self.vx*=(-1 *Physics.config.E)
+            self.vy*=Physics.config.FRICTION
+            return 1
+        if (block.posn[0]-self.radius < self.x < block.posn[0] + block.size[0]+self.radius and (self.prev_y<block.posn[1] - self.radius< self.y and self.vy > 0)):
+            self.y=block.posn[1]-self.radius
+            if self.activated:
+                self.absorbed += abs(self.vy * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+            self.vx*=Physics.config.FRICTION
+            self.vy*=(-1 *Physics.config.E)
+            return 2
+        return 0
 
 Block_Types={
     1: "WOOD",
@@ -269,16 +375,13 @@ class Block(pygame.sprite.Sprite):
                 self.velocity = 0
                 if self.health < 0 :
                     return False
-                print(self.health)
         return True
     
     def update_collision(self,bird:Bird):
         if self.type!=0:
             colnno=bird.collision_check(self)
             if self.type!=0 and colnno!=0:
-                self.health -= abs(bird.vx if colnno==1 else bird.vy) * bird.damage[self.type] * 0.02 /Physics.config.E
-                print(self.health)
-                # to update sprite as per health 
+                self.health -= abs(bird.vx if colnno==1 else bird.vy) * bird.damage[self.type] * SCALING_DAMAGE_FACTOR /Physics.config.E
                 if self.health < 0:
                     return colnno,True
                 return colnno,False
