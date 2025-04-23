@@ -34,3 +34,20 @@ def load_fonts():
     print("Loaded Fonts")
     return FONTS   
 
+def get_settings():
+    SETTINGS={
+    "autozoom" : True,
+    "zoom_speed" : 5,
+    "offset_speed" : 3,
+    "default_zoom" : 2
+    }
+    return SETTINGS
+
+def read_designs():
+    Designs,Sizes=list(),list()
+    with open("Data/Towers.txt","r") as file:
+        for line in file:
+            data = list(map(int,line.strip().split(",")))
+            Sizes.append(data[0:2])
+            Designs.append(data[2:])
+    return Designs,Sizes

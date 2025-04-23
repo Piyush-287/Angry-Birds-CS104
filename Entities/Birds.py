@@ -44,8 +44,8 @@ class Bird(pygame.sprite.Sprite):
         self.ym += self.vy * dt
 
         # Convert back to pixels
-        self.x = self.xm * Physics.config.METER
         self.y = self.ym * Physics.config.METER
+        self.x = self.xm * Physics.config.METER
 
         # === Collision with right wall ===
         if self.x + self.radius > surface_width:
@@ -56,6 +56,7 @@ class Bird(pygame.sprite.Sprite):
                 return True
             else:
                 self.vx *= -1 * Physics.config.E
+                self.vy *= Physics.config.FRICTION
 
         # === Collision with left wall ===
         if self.x < 0:
@@ -66,6 +67,7 @@ class Bird(pygame.sprite.Sprite):
                 return True
             else:
                 self.vx *= -1 * Physics.config.E
+                self.vy *= Physics.config.FRICTION
 
         # === Collision with floor ===
         if self.y + self.radius > surface_height-BASE_LOC:
@@ -90,11 +92,22 @@ class Bird(pygame.sprite.Sprite):
         screen.blit(rotated_image, rect)
     
     def collision_check(self,block):
-        if (block.posn[1] < self.y < block.posn[1] + block.size[1] and (self.prev_x<block.posn[0] - self.radius< self.x and self.vx > 0)):
+        if (block.posn[1]-self.radius < self.y < block.posn[1] + block.size[1]+self.radius and (self.prev_x<block.posn[0] - self.radius< self.x and self.vx > 0)):
+            self.x=block.posn[0]-2*self.radius
+            self.xm=self.x/Physics.config.METER
+            self.vx*=(-1 *Physics.config.E)
+            self.vy*=Physics.config.FRICTION
             return 1
-        if (block.posn[1] < self.y < block.posn[1] + block.size[1] and (self.prev_x>block.posn[0] + block.size[0] - self.radius> self.x and self.vx < 0)):
+        if (block.posn[1]-self.radius < self.y < block.posn[1] + block.size[1]+self.radius and (self.prev_x>block.posn[0] + block.size[0] - self.radius> self.x and self.vx < 0)):
+            self.x=block.posn[0] + block.size[0] + 2*self.radius
+            self.xm=self.x/Physics.config.METER
+            self.vx*=(-1 *Physics.config.E)
+            self.vy*=Physics.config.FRICTION
             return 1
-        if (block.posn[0] < self.x < block.posn[0] + block.size[0] and (self.prev_y<block.posn[1] - self.radius< self.y and self.vy > 0)):
+        if (block.posn[0]-self.radius < self.x < block.posn[0] + block.size[0]+self.radius and (self.prev_y<block.posn[1] - self.radius< self.y and self.vy > 0)):
+            self.y=block.posn[1]-self.radius
+            self.vx*=Physics.config.FRICTION
+            self.vy*=(-1 *Physics.config.E)
             return 2
         return 0
         
@@ -105,9 +118,9 @@ class Red(Bird):
         self.radius=20
         load.RESIZED["RED"]=pygame.transform.scale_by(load.SPRITE["RED"][0],self.radius*2/load.SPRITE["RED"][0].get_size()[0])
         self.damage={
-            1:20,
-            2:20,
-            3:20
+            1:15,
+            2:15,
+            3:15
         }
         self.image=load.RESIZED["RED"]
         self.playing_image=self.image
@@ -125,7 +138,7 @@ class Red(Bird):
 class Blues(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
-        self.radius=20
+        self.radius=15
         load.RESIZED["BLUES"]=pygame.transform.scale_by(load.SPRITE["BLUES"][0],self.radius*2/load.SPRITE["BLUES"][0].get_size()[0])
         self.damage={
             1:5,
@@ -195,12 +208,12 @@ class Chuck(Bird):
 class Stella(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
-        self.radius=20
+        self.radius=15
         load.RESIZED["STELLA"]=pygame.transform.scale_by(load.SPRITE["STELLA"][0],self.radius*2/load.SPRITE["STELLA"][0].get_size()[0])
         self.damage={
-            1:20,
-            2:25,
-            3:10,
+            1:15,
+            2:20,
+            3:5,
         }
         self.image=load.RESIZED["STELLA"]
         self.playing_image=self.image
@@ -260,14 +273,15 @@ class Block(pygame.sprite.Sprite):
         return True
     
     def update_collision(self,bird:Bird):
-        colnno=bird.collision_check(self)
-        if self.type!=0 and colnno!=0:
-            self.health -= abs(bird.vx if colnno==1 else bird.vy) * bird.damage[self.type] * 0.03
-            print(self.health)
-            # to update sprite as per health 
-            if self.health < 0:
-                return True,True
-            return True,False
+        if self.type!=0:
+            colnno=bird.collision_check(self)
+            if self.type!=0 and colnno!=0:
+                self.health -= abs(bird.vx if colnno==1 else bird.vy) * bird.damage[self.type] * 0.02 /Physics.config.E
+                print(self.health)
+                # to update sprite as per health 
+                if self.health < 0:
+                    return colnno,True
+                return colnno,False
         return False,False
     def draw(self,screen:pygame.Surface):
         if self.type!=0 :screen.blit(self.image,self.posn)

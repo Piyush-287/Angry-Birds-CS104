@@ -4,104 +4,15 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from load import *
 import pygame
-
-import pygame
-
-class Button:
-    def __init__(self,posn_pct,size, image, screen, on_click,redraw_callback=None):
-        """
-        posn_pct: Tuple of (x_percentage, y_percentage) e.g. (0.5, 0.3)
-        image: pygame.Surface (pre-loaded image)
-        screen: pygame display Surface (to get size for positioning)
-        on_click: Function to call when button is clicked
-        """
-        self.posn_pct = posn_pct
-        self.original_image = image
-        self.screen = screen
-        self.on_click = on_click
-        self.size=size
-        self.original_size=size
-        self.scale_up=size *1.05
-        self.redraw_callback = redraw_callback
-
-        # Get screen dimensions
-        screen_width, screen_height = self.screen.get_size()
-
-        # Calculate position in pixels
-        self.x = int(self.posn_pct[0] * screen_width)
-        self.y = int(self.posn_pct[1] * screen_height)
-        self.original_image_size=self.original_image.get_size()
-        self.width=int(self.size  * screen_width)
-        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
-
-        # Get image rect and center it at (x, y)
-        self.image=pygame.transform.scale(self.original_image,(self.width,self.height))
-        self.rect = self.image.get_rect(topleft=(self.x, self.y))
-
-    def draw(self):
-        # Draw the image
-        self.screen.blit(self.image, self.rect)
-
-    def update(self,screen):
-        self.screen=screen
-        screen_width, screen_height = screen.get_size()
-        self.x = int(self.posn_pct[0] * screen_width)
-        self.y = int(self.posn_pct[1] * screen_height)
-        self.width=int(self.size  * screen_width)
-        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
-        self.image = pygame.transform.scale(self.original_image, (self.width, self.height))
-        self.rect = self.image.get_rect(topleft=(self.x, self.y))
-
-    def update_center(self,screen):
-        self.screen=screen
-        screen_width, screen_height = screen.get_size()
-        self.width=int(self.size  * screen_width)
-        self.height=int(self.size * self.original_image_size[1]/self.original_image_size[0] * screen_width)
-        center_new=(self.x+self.width//2, self.y+self.height//2)
-        self.image = pygame.transform.scale(self.original_image, (self.width, self.height))
-        self.rect = self.image.get_rect(center=center_new)
-
-    def check_click(self, mouse_pos):
-        if self.rect.collidepoint(mouse_pos):
-            self.animate_click()
-            return self.on_click()
-        return True
-
-    def animate_click(self):
-        clock = pygame.time.Clock()
-        frames = 5
-        grow_size = self.scale_up
-        grow_step = (grow_size - self.size) / (frames // 2)
-
-        for _ in range(frames // 2):
-            self.size += grow_step
-            self.update_center(self.screen)
-            if self.redraw_callback: self.redraw_callback()  # 🔥 redraw screen
-            self.draw()
-            pygame.display.flip()
-            clock.tick(60)
-
-        for _ in range(frames // 2):
-            self.size -= grow_step
-            self.update_center(self.screen)
-            if self.redraw_callback: self.redraw_callback()
-            self.draw()
-            pygame.display.flip()
-            clock.tick(60)
-
-        self.size = self.original_size
-        self.update_center(self.screen)
-        if self.redraw_callback: self.redraw_callback()
-        self.draw()
-        pygame.display.flip()
-
+import PlayerData
+from Entities.Button import *
         
 def yo():
     print("Yo has been implemented")
     return True
 
 def quit():
-    return False
+    return 0
 
 def update_logo(screen):
     screen_size=screen.get_size()
@@ -113,16 +24,23 @@ def draw_logo(screen:pygame.Surface,img1:pygame.image,img2):
     screen.blit(img1,(0.2*screen_size[0],0.05*screen_size[1]))
     screen.blit(img2,(0.8*screen_size[0]-img2.get_width(),0.04*screen_size[1]+img1.get_height()))
 
+def playgame():
+    return 1
+def newgame():return 2
+def settings():return 3
+def controls():return 4
+def credit():return 5
+
 def main_menu(screen):
     print("Entered main menu")
     screen_size=screen.get_size()
     Buttons=list()
     #Adding all 6 buttons at the relative position:
-    Buttons.append(Button((0.15,0.4),0.3,IMAGES["NEW_GAME"],screen,yo))
-    Buttons.append(Button((0.55,0.4),0.3,IMAGES["LOAD_PREV"],screen,yo))
-    Buttons.append(Button((0.15,0.6),0.3,IMAGES["SETTINGS"],screen,yo))
-    Buttons.append(Button((0.55,0.6),0.3,IMAGES["CONTROLS"],screen,yo))
-    Buttons.append(Button((0.15,0.8),0.3,IMAGES["CREDITS"],screen,yo))
+    Buttons.append(Button((0.15,0.4),0.3,IMAGES["NEW_GAME"],screen,playgame))
+    Buttons.append(Button((0.55,0.4),0.3,IMAGES["LOAD_PREV"],screen,newgame))
+    Buttons.append(Button((0.15,0.6),0.3,IMAGES["SETTINGS"],screen,settings))
+    Buttons.append(Button((0.55,0.6),0.3,IMAGES["CONTROLS"],screen,controls))
+    Buttons.append(Button((0.15,0.8),0.3,IMAGES["CREDITS"],screen,credit))
     Buttons.append(Button((0.55,0.8),0.3,IMAGES["QUIT"],screen,quit))
     # Buttons.append(Button((0.2,0.1),(0.3,0.15),IMAGES["NEW_GAME"],screen,yo))
     menu=True
@@ -135,7 +53,9 @@ def main_menu(screen):
             if event.type==pygame.MOUSEBUTTONDOWN:
                 mouse_pos=pygame.mouse.get_pos()
                 for button in Buttons:
-                    if not button.check_click(mouse_pos): return False
+                    clicked,output=button.check_click(mouse_pos)
+                    if clicked: return output
+
             if event.type==pygame.VIDEORESIZE:
                 screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 RESIZED["MAIN_BACKGROUND"]=pygame.transform.scale(IMAGES["MAIN_BACKGROUND"],screen.get_size())
@@ -172,7 +92,7 @@ if __name__=="__main__":
     pygame.display.set_caption("")
     clock=pygame.time.Clock()
     
-    IMAGES,RESIZED=load_images()
+    IMAGES,RESIZED,SPRITE=load_images()
     FONTS=load_fonts()
     
     game = True
