@@ -342,7 +342,6 @@ def main_game(screen,clock):
                             curr_bird=None
                         if destroyed:
                             layer[i]=Block(layer[i].posn,layer[i].size,0)
-                            curr_tower=Physics.collision.tower_check(Surface,curr_tower)
                             if to_update_for:
                                 Tower_right=curr_tower
                             else : 
@@ -350,15 +349,16 @@ def main_game(screen,clock):
                             if SETTINGS["autozoom"]:
                                 STATE["target_zoom"]=SETTINGS["default_zoom"]
                                 STATE["zoomed"]=True
-                            if all(block.type==0 or block.health<=0 for layer in Tower_left for block in layer):
-                                print(player_data[1],"won")
-                                paused(Surface,screen,0.01)
-                            if all(block.type==0 or block.health<=0 for layer in Tower_right for block in layer):
-                                print(player_data[0],"won")
-                                paused(Surface,screen,0.01)
                         break
                 else :continue
                 break
+        curr_tower=Physics.collision.tower_check(Surface,curr_tower)
+        if all(block.type==0 or block.health<=0 for layer in Tower_left for block in layer):
+            print(player_data[1],"won")
+            paused(Surface,screen,0.01)
+        if all(block.type==0 or block.health<=0 for layer in Tower_right for block in layer):
+            print(player_data[0],"won")
+            paused(Surface,screen,0.01)
         if STATE["offset"]:
             rel_change=pygame.mouse.get_rel()
             STATE["offset_x"]+=rel_change[0] * SETTINGS["offset_speed"]
