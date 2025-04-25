@@ -221,31 +221,35 @@ def update_lines_circle_collision(points: list,circle: tuple,circle_vel,e: float
 #         clock.tick(60)
 
 #     pygame.quit()
+def check(tower, width, height):
+    stability = [['0' for _ in range(width)] for _ in range(height)]
 
-class Block():
-    def __init__(self,type):
-        self.type=type
-def check(Tower,Visited,width,height):
-    queue =list()
     for x in range(width):
-        if Tower[0][x].type!=0:
-            Visited[0][x] = True
-            queue.append((0, x))
-    while queue:
-        y, x = queue.pop(0)
-        for dy, dx in [(0, -1), (0, -1), (1, 0),(0,1)]:
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < height and 0 <= nx < width and not Visited[ny][nx] and Tower[ny][nx].type !=0 :
-                Visited[ny][nx] = True
-                queue.append((ny, nx))
-    return Visited
+        if tower[0][x].type != 0:
+            stability[0][x] = 'P'
 
-def tower_check(Surface: pygame.Surface, tower: list[list[Block]]) -> None:
+    for y in range(1, height):
+        for x in range(width):
+            if tower[y][x].type == 0:
+                continue
+            if stability[y - 1][x] == 'P':
+                stability[y][x] = 'P'
+                continue
+            left = x > 0 and stability[y][x - 1] == 'P'
+            right = x < width - 1 and stability[y][x + 1] == 'P'
+            if left and right:
+                stability[y][x] = 'P'
+                continue
+            if left or right:
+                stability[y][x] = 'T'
+    visited = [[stability[y][x] != '0' for x in range(width)] for y in range(height)]
+    return visited
+
+
+def tower_check(Surface: pygame.Surface, tower: list[list]) -> None:
     height = len(tower)
     width = len(tower[0]) if height > 0 else 0
-    stable = [[False for _ in range(width)] for _ in range(height)]
-    stable = check(tower,stable,width,height)
-    updated_blocks=list()
+    stable = check(tower,width,height)
     for x in range(width):
         last_stable=-1
         for y in range(height-1,-1,-1):

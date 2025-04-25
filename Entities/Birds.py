@@ -10,7 +10,7 @@ import load
 import math
 BASE_LOC=200
 SCALING_DAMAGE_FACTOR=0.02
-
+VIRTUAL_SIZE=(1920,1080)
 class Bird(pygame.sprite.Sprite):
     def __init__(self,posn,vel=(0,0),*groups):
         self.x,self.y=posn[0],posn[1]
@@ -150,11 +150,14 @@ class Blues(Bird):
             2:40,
             3:5
         }
+        self.Tower=None
         self.image=load.RESIZED["BLUES"]
         self.playing_image=self.image
         self.type=2
         self.activated=False
         self.mini_blues=[]
+        self.time_wait=-1
+        self.mini_collided=False
     def update_animation(self, *args, **kwargs):
         self.index+=1
         if self.index>=100:self.index=0
@@ -164,21 +167,47 @@ class Blues(Bird):
             self.playing_image=load.SPRITE["BLUES"][2]
         else :self.playing_image=load.SPRITE["BLUES"][0]
     def update(self, dt, surface, *args, **kwargs):
+        global STATE,VIRTUAL_SIZE
         if self.activated:
             for blue in self.mini_blues:
                 blue.update(dt,surface)
-        return super().update(dt, surface, *args, **kwargs)
+                if blue.y+blue.radius==VIRTUAL_SIZE[1]-BASE_LOC:
+                    blue.time_wait+=1
+                    if blue.time_wait==1:
+                        self.mini_blues.remove(blue)
+                else :
+                    blue.time_wait=-1
+        else:
+            return super().update(dt, surface, *args, **kwargs)
     def draw(self, screen):
         if self.activated:
             for blue in self.mini_blues:
                 blue.draw(screen)
-        super().draw(screen)
+        else :
+            super().draw(screen)
     def activate(self,screen,Tower,SelfTower):
+        self.Tower=Tower
         self.activated=True
         self.mini_blues=[
-            Blues((self.x,self.y),(self.vx,self.vy+10)),
-            Blues((self.x,self.y),(self.vx,self.vy-10))
+            Blues((self.x,self.y),(self.vx,self.vy+30)),
+            Blues((self.x,self.y),(self.vx,self.vy)),
+            Blues((self.x,self.y),(self.vx,self.vy-30))
         ]
+    def collision_check(self, block):
+        if self.activated:
+            self.mini_collided = False
+            for bird in self.mini_blues:
+                collision=bird.collision_check(block)
+                if collision != 0 : 
+                    self.vx,self.vy=bird.vx//2,bird.vy//2
+                    print(f"Collision detected between mini blue at ({bird.x}, {bird.y}) and block at {block.posn}")
+                if collision == 2 : self.mini_blues.remove(bird)
+                if collision == 1 : self.mini_collided=True
+            if self.mini_collided : return 1
+            if len(self.mini_blues)==0:
+                return 2
+            return 0
+        return super().collision_check(block)
 class Bomb(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
         super().__init__(posn, vel, *groups)
@@ -220,7 +249,7 @@ class Bomb(Bird):
                     if not self.visited[i][j]:
                         self.visited[i][j]=True 
                         distance=math.dist((self.x,self.y),self.Tower[i][j].posn)
-                        if distance!=0 :self.Tower[i][j].health -= 2500000/(distance**2)
+                        if distance!=0 and distance < self.time*15:self.Tower[i][j].health -= 50000000/(distance**2)
         return super().update(dt, surface, *args, **kwargs)
     def activate(self,screen,Tower,SelfTower):
         self.Tower=Tower
@@ -314,7 +343,7 @@ class Stella(Bird):
             self.x=block.posn[0]-2*self.radius
             self.xm=self.x/Physics.config.METER
             if self.activated:
-                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type]) * 2
             self.vx*=(-1 *Physics.config.E)
             self.vy*=Physics.config.FRICTION
             return 1
@@ -322,19 +351,18 @@ class Stella(Bird):
             self.x=block.posn[0] + block.size[0] + 2*self.radius
             self.xm=self.x/Physics.config.METER
             if self.activated:
-                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+                self.absorbed += abs(self.vx * SCALING_DAMAGE_FACTOR * self.damage[block.type]) * 2
             self.vx*=(-1 *Physics.config.E)
             self.vy*=Physics.config.FRICTION
             return 1
         if (block.posn[0]-self.radius < self.x < block.posn[0] + block.size[0]+self.radius and (self.prev_y<block.posn[1] - self.radius< self.y and self.vy > 0)):
             self.y=block.posn[1]-self.radius
             if self.activated:
-                self.absorbed += abs(self.vy * SCALING_DAMAGE_FACTOR * self.damage[block.type])
+                self.absorbed += abs(self.vy * SCALING_DAMAGE_FACTOR * self.damage[block.type]) * 2
             self.vx*=Physics.config.FRICTION
             self.vy*=(-1 *Physics.config.E)
             return 2
         return 0
-
 Block_Types={
     1: "WOOD",
     2: "GLASS",
@@ -345,7 +373,6 @@ DAMAGE_FALLING={
     2:2.5,
     3:0.8
 }
-
 class Block(pygame.sprite.Sprite):
     def __init__(self,posn,size,type,*groups):
         self.health=100
@@ -382,6 +409,7 @@ class Block(pygame.sprite.Sprite):
             colnno=bird.collision_check(self)
             if self.type!=0 and colnno!=0:
                 self.health -= abs(bird.vx if colnno==1 else bird.vy) * bird.damage[self.type] * SCALING_DAMAGE_FACTOR /Physics.config.E
+                print(self.health)
                 if self.health < 0:
                     return colnno,True
                 return colnno,False

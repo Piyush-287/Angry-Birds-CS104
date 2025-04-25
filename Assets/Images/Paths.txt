@@ -1,5 +1,5 @@
 BACKGROUND_IMAGE,Background_image.png,0,0,0
-MAIN_BACKGROUND,new_blur.png,0,0,0
+MAIN_BACKGROUND,newmountain.jpeg,0,0,0
 LOGO,Angry_Birds_logo.png,0,0,0
 LOGO2,SHADOW_FLIGHT.png,0,0,0
 NEW_GAME,New_game_button.png,0,0,0
@@ -8,7 +8,7 @@ CONTROLS,controls.png,0,0,0
 QUIT,quit.png,0,0,0
 CREDITS,credits.png,0,0,0
 SETTINGS,settings.png,0,0,0
-MOUNTAIN,Mountain.png,30,0,0
+MOUNTAIN,newmountain.jpeg,20,0,0
 RARROW,right-arrow.png,0,0,0
 LARROW,left-arrow.png,0,0,0
 GLASS,glass.png,40,0,0

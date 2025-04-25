@@ -4,6 +4,7 @@ import load
 import Scenes.UI.main_menu as menu
 import main_game
 import PlayerData
+import settings
 pygame.init()
 
 IMAGES,RESIZED,SPRITES=load.load_images()
@@ -27,6 +28,8 @@ while game:
             x=main_game.main_game(screen,clock)
             while x==1:
                 x=main_game.main_game(screen,clock)
+        case 3:
+            settings.get_settings(screen,clock)
         case _:
             print("idk what you choosed")
 pygame.quit()

@@ -17,8 +17,7 @@ def display_tower(screen:pygame.surface,curr,size):
         2 : RESIZED["GLASS"],
         3 : RESIZED["STONE"]
     }
-    sprite_size=Blocks[1].get_size()
-
+    sprite_size=Blocks[2].get_size()
     for i in range(size[0]):
         for j in range(size[1]):
             posn=((screen.get_size()[0]-size[0]*sprite_size[0])//2+i*sprite_size[0],BASE_LOC-(j+1)*sprite_size[1])
@@ -58,12 +57,12 @@ def get_player_data():
             nonlocal curr_index
             curr_index=(curr_index+1)%len(Designs)
         def redraw_screen():
-            screen_width, screen_height = screen.get_size()
-            Scenes.Game.background.background.generate_background(screen)
-            RESIZED["MOUNTAIN"] = pygame.transform.scale(
-                IMAGES["MOUNTAIN"], (screen_width * 3, int(screen_height * 1.75))
+            screen_width, screen_height = screen.get_size() 
+            screen.fill("orange")
+            RESIZED["MOUNTAIN"] = pygame.transform.smoothscale(
+                IMAGES["MOUNTAIN"], (screen_width * 2.5, screen_height * 2.5)
             )
-            screen.blit(RESIZED["MOUNTAIN"], (mountain_x, 0))
+            screen.blit(RESIZED["MOUNTAIN"], (mountain_x, -1.25*screen_height))
             pygame.draw.rect(screen, BASE_COLOR, (0, BASE_LOC, screen_width, screen_height - BASE_LOC))
             
             input_box.x = screen_width // 2 - 4*len(player_name)
@@ -99,12 +98,10 @@ def get_player_data():
         while running:
             BASE_LOC=screen.get_height() * 0.8
             screen_width, screen_height = screen.get_size()
-            RATIO= 0.45/ max(Sizes[curr_index][0],Sizes[curr_index][1])
-            RESIZED["GLASS"]=pygame.transform.scale(IMAGES["GLASS"],(int(RATIO*screen_width),int(RATIO*screen_height)))    
-            RESIZED["WOOD"]=pygame.transform.scale(IMAGES["WOOD"],(int(RATIO*screen_width),int(RATIO*screen_height)))
-            RESIZED["STONE"]=pygame.transform.scale(IMAGES["STONE"],(int(RATIO*screen_width),int(RATIO*screen_height)))
-
-            
+            RATIO= 0.35/ max(Sizes[curr_index][0],Sizes[curr_index][1]) 
+            RESIZED["WOOD"]=pygame.transform.smoothscale_by(IMAGES["WOOD"],RATIO * screen_width/IMAGES["WOOD"].get_width())
+            RESIZED["GLASS"]=pygame.transform.smoothscale_by(IMAGES["GLASS"],RATIO * screen_width/IMAGES["GLASS"].get_width())
+            RESIZED["STONE"]=pygame.transform.smoothscale_by(IMAGES["STONE"],RATIO * screen_width/IMAGES["STONE"].get_width())
             # Update input box position
             bottom_y = BASE_LOC + (screen_height - BASE_LOC) // 2 - box_height // 2
             input_box.y = bottom_y
@@ -138,11 +135,11 @@ def get_player_data():
                             player_name += event.unicode
 
             # === Draw background ===
-            Scenes.Game.background.background.generate_background(screen)
-            RESIZED["MOUNTAIN"] = pygame.transform.scale(
-                IMAGES["MOUNTAIN"], (screen_width * 3, int(screen_height * 1.75))
+            screen.fill("orange")
+            RESIZED["MOUNTAIN"] = pygame.transform.smoothscale(
+                IMAGES["MOUNTAIN"], (screen_width * 2.5, screen_height * 2.5)
             )
-            screen.blit(RESIZED["MOUNTAIN"], (mountain_x, 0))
+            screen.blit(RESIZED["MOUNTAIN"], (mountain_x, -1.25*screen_height))
 
             # === Draw dark bottom rectangle ===
             pygame.draw.rect(screen, BASE_COLOR , (0, BASE_LOC, screen_width, screen_height))
@@ -185,7 +182,7 @@ def get_player_data():
     if not Player1:
         return False
     global BASE_LOC
-    while running and mountain_x+screen_width*2-100>0:
+    while running and mountain_x+screen_width>0:
         screen_width, screen_height = screen.get_size()
         BASE_LOC=screen_height*0.8
         for event in pygame.event.get():
@@ -193,13 +190,13 @@ def get_player_data():
                 return False
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE:
-                    mountain_x=-2*screen_width+100
-        Scenes.Game.background.background.generate_background(screen)
-        RESIZED["MOUNTAIN"] = pygame.transform.scale(
-            IMAGES["MOUNTAIN"], (screen_width * 3, int(screen_height * 1.75))
+                    mountain_x=-screen_width
+        screen.fill("orange")
+        RESIZED["MOUNTAIN"] = pygame.transform.smoothscale(
+            IMAGES["MOUNTAIN"], (screen_width * 2.5, screen_height * 2.5)
         )
-        screen.blit(RESIZED["MOUNTAIN"], (mountain_x, 0))
-        mountain_x-=10
+        screen.blit(RESIZED["MOUNTAIN"], (mountain_x, -1.25*screen_height))
+        mountain_x += (-screen_width - mountain_x-10) * 0.05
         pygame.draw.rect(screen, BASE_COLOR, (0, BASE_LOC, screen_width, screen_height - BASE_LOC+50))
         pygame.display.flip()
         clock.tick(60)
