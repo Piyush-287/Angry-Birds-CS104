@@ -1,0 +1,10 @@
+RED,red.mp3
+CHUCK,chuck.mp3
+BLUES,blues.mp3
+BOMB,bomb.mp3
+STELLA,stella.mp3
+GLASS,glass.mp3
+WOOD,wood.mp3
+STONE,stone.mp3
+SLINGSHOT,slingshot.mp3
+LAUNCH,launch.mp3

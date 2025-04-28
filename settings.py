@@ -13,7 +13,17 @@ import load
 import Scenes.Game.background.background as background
 pygame.init()
 FONTS=load.load_fonts()
+def save_settings():
+    with open("Data/settings.txt","w") as file:
+        for key,item in SETTINGS.items():
+            file.write(str(item)+"\n")
+def load_settings():
+    with open("Data/settings.txt","r") as file:
+        for key,item in SETTINGS.items():
+            SETTINGS[key]=eval(file.readline())
+
 def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
+    load_settings()
     global FONTS
     screen_width,screen_height=screen.get_size()
     words=["Autozoom","Autosave","Super Birds","Music"]
@@ -29,12 +39,15 @@ def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
     target_x.append(1.0 if SETTINGS["Music"] else 0.0)
     x=target_x.copy()
     DRAG=False
+    save_hover=False
     while game:
         screen_width,screen_height=screen.get_size()
         clock.tick(60)
+        save_button=pygame.Surface((int(screen_width*0.1),int(screen_height*0.1)),pygame.SRCALPHA)
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
+                load_settings()
                 return 1
             if event.type==pygame.MOUSEBUTTONDOWN:
                 button_rect = pygame.Rect(int(screen_width * 0.7), int(screen_height * 0.15),int(screen_width * 0.1), int(screen_height * 0.1))
@@ -54,14 +67,22 @@ def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
                     SETTINGS["Music"] = not SETTINGS["Music"]
                     target_x[3] = 1.0 if SETTINGS["Music"] else 0.0
                 button_rect = pygame.Rect(int(screen_width * 0.5), int(screen_height * 0.51),int(screen_width * 0.1), int(screen_height * 0.1))
-                if 0.7*screen_height<mouse_pos[1]<0.71*screen_height:
+                if 0.69*screen_height<mouse_pos[1]<0.72*screen_height:
                     DRAG=True
+                if save_hover:
+                    save_settings()
+                    return 1
             if event.type==pygame.MOUSEBUTTONUP:
                 DRAG=False
         if DRAG and SETTINGS["Music"]:
             print("here")
             SETTINGS["Volume"]=min(100,max((mouse_pos[0]-0.5*screen_width)/(0.3*screen_width)*100,0))
             print(SETTINGS["Volume"])
+        save_rect = pygame.Rect(int(0.45 * screen_width), int(0.75 * screen_height), int(0.1 * screen_width), int(0.1 * screen_height))
+        if save_rect.collidepoint(mouse_pos):
+            save_hover = True
+        else:
+            save_hover = False
         background.generate_background(screen)
         background.generate_mountains(screen)
         temp=pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
@@ -83,7 +104,12 @@ def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
             screen.blit(text,(0.2*screen_width,(0.65)*screen_height))
             pygame.draw.rect(screen,"white",(0.5*screen_width,0.7*screen_height,0.3*screen_width,0.01*screen_height),width=1)
             pygame.draw.rect(screen,"white",(0.5*screen_width,0.7*screen_height,0.3*screen_width*SETTINGS["Volume"]/100,0.01*screen_height))
-            pygame.draw.circle(screen,"white",((0.5+0.3*SETTINGS["Volume"]/100)*screen_width,0.705*screen_height),10)
+            pygame.draw.circle(screen,"white",((0.5+0.3*SETTINGS["Volume"]/100)*screen_width,0.705*screen_height),10 if DRAG else 5)
+        pygame.draw.rect(save_button,"white",(0,0,int(screen_width*0.1),int(screen_height*0.1)),border_radius=int(screen_height*0.02),width=5 if save_hover else 3)
+        text=FONTS["AngryBirds_256"].render("SAVE",True,(255,255,255,0 if save_hover else 255))
+        text=pygame.transform.smoothscale_by(text,0.08*screen_height/text.get_height())
+        save_button.blit(text,((0.1*screen_width - text.get_width())//2,(0.1*screen_height - text.get_height())//2))
+        screen.blit(save_button,(0.45*screen_width,0.75*screen_height))
         pygame.display.flip()
 
 

@@ -3,6 +3,7 @@ pygame.font.init()
 pygame.display.init()
 IMAGES,RESIZED,SPRITE=dict(),dict(),dict()
 FONTS=dict()
+SOUND=dict()
 def load_images():
     global IMAGES,RESIZED
     with open("Assets/Images/Paths.txt","r") as file:
@@ -27,12 +28,20 @@ def load_images():
 
 def load_fonts():
     global FONTS
-    with open("Assets/FONTS/Paths.txt","r") as file:
+    with open("Assets/Fonts/Paths.txt","r") as file:
         for line in file:
             name,path,size = line.strip().split(",")
             FONTS[f"{name}_{size}"]=pygame.font.Font(str("Assets/Fonts/")+path,int(size))
     print("Loaded Fonts")
     return FONTS   
+def load_sound():
+    global SOUND
+    with open("Assets/Sound/Paths.txt","r") as file:
+        for line in file:
+            name,path = line.strip().split(",")
+            SOUND[name]=pygame.mixer.Sound(str("Assets/Sound/")+path)
+    print("Loaded SOUND")
+    return SOUND
 
 def get_settings():
     SETTINGS={

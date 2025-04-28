@@ -13,9 +13,9 @@ BIRDS=[
 BASE_LOC=200
 def display_tower(screen:pygame.surface,curr,size):
     Blocks={
-        1 : RESIZED["WOOD"],
-        2 : RESIZED["GLASS"],
-        3 : RESIZED["STONE"]
+        1 : RESIZED["WOOD_4"],
+        2 : RESIZED["GLASS_4"],
+        3 : RESIZED["STONE_4"]
     }
     sprite_size=Blocks[2].get_size()
     for i in range(size[0]):
@@ -99,9 +99,9 @@ def get_player_data():
             BASE_LOC=screen.get_height() * 0.8
             screen_width, screen_height = screen.get_size()
             RATIO= 0.35/ max(Sizes[curr_index][0],Sizes[curr_index][1]) 
-            RESIZED["WOOD"]=pygame.transform.smoothscale_by(IMAGES["WOOD"],RATIO * screen_width/IMAGES["WOOD"].get_width())
-            RESIZED["GLASS"]=pygame.transform.smoothscale_by(IMAGES["GLASS"],RATIO * screen_width/IMAGES["GLASS"].get_width())
-            RESIZED["STONE"]=pygame.transform.smoothscale_by(IMAGES["STONE"],RATIO * screen_width/IMAGES["STONE"].get_width())
+            RESIZED["WOOD_4"]=pygame.transform.smoothscale_by(IMAGES["WOOD_4"],RATIO * screen_width/IMAGES["WOOD_4"].get_width())
+            RESIZED["GLASS_4"]=pygame.transform.smoothscale_by(IMAGES["GLASS_4"],RATIO * screen_width/IMAGES["GLASS_4"].get_width())
+            RESIZED["STONE_4"]=pygame.transform.smoothscale_by(IMAGES["STONE_4"],RATIO * screen_width/IMAGES["STONE_4"].get_width())
             # Update input box position
             bottom_y = BASE_LOC + (screen_height - BASE_LOC) // 2 - box_height // 2
             input_box.y = bottom_y
@@ -131,7 +131,7 @@ def get_player_data():
                     elif event.key == pygame.K_BACKSPACE:
                         player_name = player_name[:-1]
                     else:
-                        if len(player_name) < 24:
+                        if len(player_name) < 16:
                             player_name += event.unicode
 
             # === Draw background ===
@@ -197,7 +197,7 @@ def get_player_data():
         )
         screen.blit(RESIZED["MOUNTAIN"], (mountain_x, -1.25*screen_height))
         mountain_x += (-screen_width - mountain_x-10) * 0.05
-        pygame.draw.rect(screen, BASE_COLOR, (0, BASE_LOC, screen_width, screen_height - BASE_LOC+50))
+        pygame.draw.rect(screen, BASE_COLOR, (0, BASE_LOC, screen_width, screen_height - BASE_LOC+100))
         pygame.display.flip()
         clock.tick(60)
     Player2,Tower2=get_input("Player2")
@@ -212,8 +212,18 @@ def get_player_data():
         file.write(str([(tile,100) for tile in Designs[Tower1]])+"\n")
         file.write(str([(tile,100) for tile in Designs[Tower2]])+"\n")
         file.write("True")
+    # fade out 
+    fade_out(screen,clock)
     return [Player1,Player2,Tower1,Tower2]
 
+def fade_out(screen,clock):
+    for i in range(32):
+        temp=pygame.Surface(screen.get_size(),pygame.SRCALPHA)
+        temp.fill("black")
+        temp.set_alpha(8*i)
+        screen.blit(temp,(0,0))
+        pygame.display.flip()
+        clock.tick(60)
 if __name__=="__main__":
     output=print(get_player_data())
     print("========>",output)
