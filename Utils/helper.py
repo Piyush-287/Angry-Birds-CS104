@@ -39,7 +39,6 @@ def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super
     scaled_sprites = []
     aura=[]
     for i  in range(3):
-        print(str(type(birds_list[i])).upper())
         surf = SPRITE[str(type(birds_list[i])).split(".")[1].upper()][2]
         scaled = pygame.transform.smoothscale(surf, (int(0.8*box_size), int(0.8*box_size)))
         if not leftside:

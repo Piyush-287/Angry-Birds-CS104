@@ -11,11 +11,11 @@ SETTINGS,settings.png,0,0,0
 MOUNTAIN,newmountain.jpeg,20,0,0
 RARROW,right-arrow.png,0,0,0
 LARROW,left-arrow.png,0,0,0
-GLASS_0,glass.png,40,0,0
-GLASS_1,glass.png,40,0,0
-GLASS_2,glass.png,40,0,0
-GLASS_3,glass.png,40,0,0
-GLASS_4,glass.png,40,0,0
+GLASS_0,glass_4.jpeg,60,0,0
+GLASS_1,glass_3.png,60,0,0
+GLASS_2,glass_3.jpeg,60,0,0
+GLASS_3,glass_2.jpeg,60,0,0
+GLASS_4,glass_1.jpeg,60,0,0
 WOOD_0,wood_0.png,0,0,0
 WOOD_1,wood_2.png,0,0,0
 WOOD_2,wood_1.png,0,0,0

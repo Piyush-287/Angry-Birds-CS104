@@ -46,7 +46,6 @@ class Bomb(Bird):
             for i in range(len(self.Tower)):
                 for j in range(len(self.Tower[0])):
                     if self.visited[i][j]==False and self.Tower[i][j].type!=0:
-                        print(self.x,self.y,self.Tower[i][j].posn,self.time)
                         distance=min(
                             math.dist((self.x-self.Tower[i][j].size[0],self.y-self.Tower[i][j].size[1]),self.Tower[i][j].posn),
                             math.dist((self.x-self.Tower[i][j].size[0],self.y),self.Tower[i][j].posn),
@@ -62,7 +61,6 @@ class Bomb(Bird):
                                 self.Tower[i][j].image=None
                                 self.Tower[i][j].falling=False
                                 self.Tower[i][j].type=0
-                            print(self.Tower[i][j].health)
         return super().update(dt, surface, *args, **kwargs)
     def activate(self,screen,Tower,SelfTower):
         self.Tower=Tower
