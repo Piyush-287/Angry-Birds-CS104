@@ -37,7 +37,7 @@ def paused(surface,screen,scale_factor,clock):
     Buttons=[
         Button((0.4,0.1),0.2,IMAGES["CONTINUE"],screen,lambda : 1),
         Button((0.4,0.3),0.2,IMAGES["RESTART"],screen,lambda :2),
-        Button((0.4,0.5),0.2,IMAGES["CONTROLS_1"],screen,lambda :4),
+        Button((0.4,0.5),0.2,IMAGES["HOW_TO_PLAY"],screen,lambda :4),
         Button((0.4,0.7),0.2,IMAGES["SAVE"],screen,lambda :3)
     ] 
     while True:

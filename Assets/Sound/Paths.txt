@@ -8,3 +8,4 @@ WOOD,wood.mp3
 STONE,stone.mp3
 SLINGSHOT,slingshot.mp3
 LAUNCH,launch.mp3
+BGMUSIC,bg_music.mp3

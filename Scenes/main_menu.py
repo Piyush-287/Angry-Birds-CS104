@@ -39,8 +39,8 @@ def main_menu(screen):
     Buttons.append(Button((0.15,0.4),0.3,IMAGES["NEW_GAME"],screen,playgame))
     Buttons.append(Button((0.55,0.4),0.3,IMAGES["LOAD_PREV"],screen,newgame))
     Buttons.append(Button((0.15,0.6),0.3,IMAGES["SETTINGS"],screen,settings))
-    Buttons.append(Button((0.55,0.6),0.3,IMAGES["CONTROLS"],screen,controls))
-    Buttons.append(Button((0.15,0.8),0.3,IMAGES["CREDITS"],screen,credit))
+    Buttons.append(Button((0.55,0.6),0.3,IMAGES["TUTORIAL"],screen,controls))
+    Buttons.append(Button((0.15,0.8),0.3,IMAGES["LEADERBOARD"],screen,credit))
     Buttons.append(Button((0.55,0.8),0.3,IMAGES["QUIT"],screen,quit))
     # Buttons.append(Button((0.2,0.1),(0.3,0.15),IMAGES["NEW_GAME"],screen,yo))
     menu=True

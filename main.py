@@ -16,7 +16,6 @@ screen=pygame.display.set_mode((960,540),pygame.RESIZABLE)
 clock=pygame.time.Clock()
 game=True
 while game:
-    settings.load_settings()
     match menu.main_menu(screen):
         case 0:
             game=False
