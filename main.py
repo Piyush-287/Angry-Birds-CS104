@@ -5,6 +5,8 @@ import Scenes.UI.main_menu as menu
 import main_game
 import PlayerData
 import settings
+import tutorial
+import leaderboard
 pygame.init()
 
 IMAGES,RESIZED,SPRITES=load.load_images()
@@ -39,6 +41,10 @@ while game:
         case 3:
             PlayerData.fade_out(screen,clock)
             settings.get_settings(screen,clock)
+        case 4:
+            tutorial.tutorial(screen,clock)
+        case 5:
+            leaderboard.show_leaderboard(screen,clock)
         case _:
             print("idk what you choosed")
 pygame.quit()

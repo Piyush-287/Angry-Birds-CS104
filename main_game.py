@@ -1,4 +1,5 @@
 import pygame
+import tutorial
 VIRTUAL_SIZE=(1920,1080)
 import random 
 import math
@@ -45,6 +46,9 @@ def reload():
     lines[4]=str([(tile,100) for tile in Designs[data[3]]])+"\n"
     lines[5]="True"
     with open("data/lastgame.txt","w") as file:file.writelines(lines)   
+def tut():
+    tutorial.tutorial(screen,clock)
+    return 1
 def cont():return 1
 def save_data():return 3
 def restart():return 2 
@@ -52,7 +56,7 @@ def paused(surface,screen,scale_factor):
     Buttons=[
         Button((0.4,0.1),0.2,IMAGES["CONTINUE"],screen,cont),
         Button((0.4,0.3),0.2,IMAGES["RESTART"],screen,restart),
-        Button((0.4,0.5),0.2,IMAGES["CONTROLS_1"],screen,cont),
+        Button((0.4,0.5),0.2,IMAGES["CONTROLS_1"],screen,tut),
         Button((0.4,0.7),0.2,IMAGES["SAVE"],screen,save_data)
     ] 
     while True:
@@ -66,7 +70,6 @@ def paused(surface,screen,scale_factor):
                         clicked,result=button.check_click(mouse)
                         if clicked:
                             return result
-
         size = surface.get_size()
         scaled_down = pygame.transform.smoothscale(surface, 
             (int(size[0] * scale_factor), int(size[1] * scale_factor)))
@@ -157,7 +160,7 @@ def update_bird_list(bird_list:list[Bird],selected,leftside):
     bird_list.remove(selected)
     bird_list.append(get_bird(leftside,selected.type))
     selected=None
-def display_animation_of_choosing(Surface, leftside, birds_list,playerdata, n_frames=10):
+def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super_points,n_frames=10):
     global STATE
     screen_w, screen_h = Surface.get_size()
     box_size    = int(0.1 * screen_h)
@@ -197,6 +200,14 @@ def display_animation_of_choosing(Surface, leftside, birds_list,playerdata, n_fr
         Rects=[]
         for i, img in enumerate(scaled_sprites):
             rx = x_offset + i * spacing
+            if STATE["super"]:
+                if super_points[birds_list[i].type-1] >= 300:
+                    pygame.draw.rect(Surface,"green",( rx,y_pos, box_size, box_size))
+                else :
+                    temp=pygame.Surface((box_size,box_size),pygame.SRCALPHA)
+                    pygame.draw.rect(temp,"green",(0,0,box_size,int(super_points[birds_list[i].type-1]*box_size/300)))
+                    temp.set_alpha(32)
+                    Surface.blit(temp,(rx,y_pos+int(box_size-super_points[birds_list[i].type-1]*box_size/300)))
             rectangle=pygame.draw.rect(Surface, "black", ( rx,y_pos, box_size, box_size), width=outline_w)
             pygame.draw.rect(Surface, "orange",rectangle,width=2)
             if STATE["selected_rect"]==rectangle:
@@ -248,13 +259,13 @@ def main_game(screen:pygame.Surface,clock):
             file.write(str([(block.type,block.health) for layer in Tower_right for block in layer])+"\n")
             file.write(str(STATE["player1turn"]))
     def change_chances():
-        nonlocal left_list,right_list,anim
+        nonlocal left_list,right_list,anim,super_points_left,super_points_right
         global STATE
         STATE["birdlaunched"]=False
         if not STATE["player1turn"]:
-            anim = display_animation_of_choosing(screen, (not STATE["player1turn"]), left_list,player_data)
+            anim = display_animation_of_choosing(screen, (not STATE["player1turn"]), left_list,player_data,super_points_left)
         else:
-            anim = display_animation_of_choosing(screen, (not STATE["player1turn"]), right_list,player_data)
+            anim = display_animation_of_choosing(screen, (not STATE["player1turn"]), right_list,player_data,super_points_right)
         STATE["player1turn"]=not STATE["player1turn"]
         STATE["super"]=False
     Surface=pygame.surface.Surface(VIRTUAL_SIZE)
@@ -269,12 +280,16 @@ def main_game(screen:pygame.Surface,clock):
     Left_Sling=slingshot((0.25*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["LSLING"].get_size()[1]-195),RESIZED["LSLING"],(10,10),Surface.get_size()[1],True)
     Right_SLing=slingshot((0.75*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["RSLING"].get_size()[1]-195),RESIZED["RSLING"],(10,10),Surface.get_size()[1],False)
     player_data,left_list,right_list,Tower_left,Tower_right=initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])])
-    anim = display_animation_of_choosing(screen, STATE["player1turn"], left_list if STATE["player1turn"] else right_list,player_data)
+    super_points_left=[0,0,0,0,0]
+    super_points_right=[0,0,0,0,0]
+    anim = display_animation_of_choosing(screen, STATE["player1turn"], left_list if STATE["player1turn"] else right_list,player_data,super_points_left if STATE["player1turn"] else super_points_right)
     time_wait=-1
+    prev_left_health=sum(block.health for layer in Tower_left for block in layer)
+    prev_right_health=sum(block.health for layer in Tower_right for block in layer)
+    left_health,right_health=prev_left_health,prev_right_health
     selection_ui_boxes:list[pygame.Rect]=[]
     frame_capture=0
     curr_bird,text=None,None
-    super_points=[0 for _ in range(5)]
     wait=0
     def fade_in():
         temp=pygame.Surface(VIRTUAL_SIZE,pygame.SRCALPHA)
@@ -291,22 +306,26 @@ def main_game(screen:pygame.Surface,clock):
             Left_Sling.draw(Surface)
             Right_SLing.draw(Surface)
             pygame.display.flip()
-    def win(player1won):
+    def win(player1won,score):
         if player1won:
-            Winner,Loser=player_data[0],player_data[1]
+            Winner,Loser=leaderboard.get_player(player_data[0]),leaderboard.get_player(player_data[1])
         else:
-            Winner,Loser=player_data[1],player_data[0]
-            
+            Winner,Loser=leaderboard.get_player(player_data[1]),leaderboard.get_player(player_data[0])
+        Winner_prev_rating,Loser_prev_rating=Winner.rating,Loser.rating
+        leaderboard.update_rating(Winner,Loser,score)
+        win_change=Winner.rating-Winner_prev_rating
+        lose_change=Loser.rating-Loser_prev_rating
         temp = pygame.Surface(VIRTUAL_SIZE, pygame.SRCALPHA)
         temp.fill("black")
         temp.set_alpha(192)
         Surface.blit(temp, (0, 0))
         screen_width, screen_height = screen.get_size()
-        base_text = FONTS["ShadowFight_256"].render(Winner, True, "black")
+        base_text = FONTS["ShadowFight_256"].render(Winner.name, True, "black")
         text_scale = 0.30 * screen_height / 256
         reveal_progress = 0
         clock = pygame.time.Clock()
         y=0
+        leaderboard.save_data()
         while True:
             screen_width, screen_height = screen.get_size()
             text_scale = 0.30 * screen_height / 256
@@ -323,7 +342,7 @@ def main_game(screen:pygame.Surface,clock):
                     if Button_2.collidepoint(mouse_posn):
                         reload()
                         return 1
-                    if Button_3.collidepoint(mouse_posn):print("Leaderboard not made yet")
+                    if Button_3.collidepoint(mouse_posn):leaderboard.show_leaderboard(screen,clock)
                     if Button_4.collidepoint(mouse_posn):return 0
                     continue
             text = pygame.transform.smoothscale_by(base_text, min(text_scale,0.8*screen_width/base_text.get_width()))
@@ -338,12 +357,12 @@ def main_game(screen:pygame.Surface,clock):
             if visible_height > 0:
                 screen.blit(visible_text, ((screen_width - text.get_width()) // 2,int(0.05 * screen_height)))
             screen.blit(text_1, ((screen_width - text_1.get_width()) // 2,int(0.05 * screen_height) + text.get_height()))
-            score=pygame.transform.smoothscale_by(FONTS["AngryBirds_32"].render(f"{Winner}: +{int(reveal_progress*100)}", True, "green"), text_scale)
+            score=pygame.transform.smoothscale_by(FONTS["AngryBirds_32"].render(f"{Winner.name}: +{int(reveal_progress*(win_change))}", True, "green"), text_scale)
             screen.blit(score,(
                     (screen_width//2 - score.get_width()) // 2,
                     int(0.05 * screen_height + text.get_height() + text_1.get_height())                 
             ))
-            score=pygame.transform.smoothscale_by(FONTS["AngryBirds_32"].render(f"{Loser}: -{int(reveal_progress*200)}", True, "red"), text_scale)
+            score=pygame.transform.smoothscale_by(FONTS["AngryBirds_32"].render(f"{Loser.name}: -{int(reveal_progress*(lose_change))}", True, "red"), text_scale)
             screen.blit(score,(
                     (screen_width//2 - score.get_width()) // 2 + screen_width//2,
                     int(0.05 * screen_height + text.get_height() + text_1.get_height())                 
@@ -393,10 +412,21 @@ def main_game(screen:pygame.Surface,clock):
                                 game=False
                     case pygame.K_s:
                         if curr_bird is not None and STATE["birdlaunched"] and SETTINGS["Super"]:
-                            SOUND[str(type(curr_bird))[23:-2].upper()].set_volume(SETTINGS["Volume"]/100*0.8)
-                            SOUND[str(type(curr_bird))[23:-2].upper()].play()
-                            curr_bird.activate(Surface,Tower_right if STATE["player1turn"] else Tower_left,Tower_left if STATE["player1turn"] else Tower_right)
-                            STATE["super"]=True
+                            if (STATE["player1turn"] and super_points_left[curr_bird.type-1] >= 300) or (not STATE["player1turn"] and super_points_right[curr_bird.type-1] >= 300):
+                                print(str(curr_bird)[1:-21].upper())
+                                SOUND[str(curr_bird)[1:-21].upper()].set_volume(SETTINGS["Volume"] / 100 * 0.8)
+                                SOUND[str(curr_bird)[1:-21].upper()].play()
+                                curr_bird.activate(
+                                    Surface,
+                                    Tower_right if STATE["player1turn"] else Tower_left,
+                                    Tower_left if STATE["player1turn"] else Tower_right
+                                )
+                                STATE["super"] = True
+
+                                if STATE["player1turn"]:
+                                    super_points_left[curr_bird.type-1] = 0
+                                else:
+                                    super_points_right[curr_bird.type-1] = 0
                     case pygame.K_p:
                         if frame_capture==0:frame_capture=1
                         else :
@@ -417,7 +447,6 @@ def main_game(screen:pygame.Surface,clock):
                     for rect in selection_ui_boxes:
                         if rect.collidepoint(mouse_posn_screen):
                             STATE["selected_rect"]=rect
-
                 if event.button==3:
                     pygame.mouse.get_rel() 
                     STATE["offset"]=True
@@ -475,6 +504,7 @@ def main_game(screen:pygame.Surface,clock):
                     collided,destroyed=layer[i].update_collision(curr_bird)
                     to_update_for=STATE["player1turn"]
                     if collided!=0:
+                        type=curr_bird.type-1
                         if collided==2:
                             update_bird_list(right_list if not STATE["player1turn"] else left_list,STATE["selected_bird"],STATE["player1turn"])
                             change_chances()
@@ -482,6 +512,15 @@ def main_game(screen:pygame.Surface,clock):
                             curr_tower= Physics.collision.tower_check(Surface, curr_tower)
                             break
                         if destroyed:
+                            if not STATE["super"]:
+                                if STATE["player1turn"]:
+                                    print(super_points_left)
+                                    super_points_left[curr_bird.type-1]+=100
+                                    print(super_points_left)
+                                else:
+                                    print(super_points_right)
+                                    super_points_right[curr_bird.type-1]+=100
+                                    print(super_points_right)
                             layer[i]=Block(layer[i].posn,layer[i].size,0)
                             if to_update_for:
                                 Tower_right=curr_tower
@@ -491,7 +530,16 @@ def main_game(screen:pygame.Surface,clock):
                             if SETTINGS["autozoom"]:
                                 STATE["target_zoom"]=SETTINGS["default_zoom"]
                                 STATE["zoomed"]=True
-        
+                        prev_left_health,prev_right_health=left_health,right_health
+                        left_health=sum(block.health for layer in Tower_left for block in layer)
+                        right_health=sum(block.health for layer in Tower_right for block in layer)
+                        if STATE["player1turn"]:
+                            super_points_left[curr_bird.type-1]-=right_health-prev_left_health
+                            print(super_points_left)
+                        else:
+                            super_points_right[curr_bird.type-1]-=left_health-prev_left_health
+                            print(super_points_right)
+
         if STATE["anyfall"]:
             curr_tower= Physics.collision.tower_check(Surface, curr_tower)
         if any(block.falling for layer in curr_tower for block in layer):
@@ -505,11 +553,11 @@ def main_game(screen:pygame.Surface,clock):
         if all(block.type==0 or block.health<=0 for layer in Tower_left for block in layer):
             curr_bird=None
             print(player_data[1],"won")
-            return win(False)
+            return win(False,0.6)
         if all(block.type==0 or block.health<=0 for layer in Tower_right for block in layer):
             print(player_data[0],"won")
             curr_bird=None
-            return win(True)
+            return win(True,0.6)
         if STATE["offset"]:
             rel_change=pygame.mouse.get_rel()
             STATE["offset_x"]+=rel_change[0] * SETTINGS["offset_speed"]

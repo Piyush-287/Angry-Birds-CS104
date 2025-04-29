@@ -6,7 +6,9 @@ from Entities.Button import *
 from load import *
 from Physics.config import * 
 import random
+import leaderboard
 pygame.init()
+leaderboard.load_data()
 BIRDS=[
 
 ]
@@ -36,7 +38,6 @@ mountain_x=0
 # Input setup
 clock = pygame.time.Clock()
 
-
 def get_player_data():
     global BASE_LOC
     running = True
@@ -50,6 +51,8 @@ def get_player_data():
         padding = 20
         input_box = pygame.Rect(0, 0, box_width, box_height) 
         curr_index=0
+        rating_rect = None
+        Player=None
         def scrollleft():
             nonlocal curr_index
             curr_index=len(Designs)-1 if curr_index==0 else curr_index-1
@@ -127,12 +130,18 @@ def get_player_data():
                 elif event.type == pygame.KEYDOWN and active:
                     if event.key == pygame.K_RETURN:
                         print("Player Name:", player_name)
+                        Player=leaderboard.get_player(player_name)
+                        Player=leaderboard.add_player(player_name)
                         return player_name,curr_index
                     elif event.key == pygame.K_BACKSPACE:
                         player_name = player_name[:-1]
+                        Player=leaderboard.get_player(player_name)
                     else:
                         if len(player_name) < 16:
                             player_name += event.unicode
+                            Player=leaderboard.get_player(player_name)
+                            if len(player_name)==0:
+                                Player=None
 
             # === Draw background ===
             screen.fill("orange")
@@ -171,7 +180,21 @@ def get_player_data():
             right_button.update(screen)
             left_button.draw()
             right_button.draw()
-            
+            if Player is not None:
+                rating_rect=(0.8*screen_width,input_box.y+10,0.1*screen_width,50)
+                if Player.matches == 0 : color="grey"
+                elif Player.rank == 1: color=(255,215,0)
+                elif Player.rank == 2: color=(192,192,192)
+                elif Player.rank == 3: color=(176,141,87)
+                elif Player.rank < 10 : color="green"
+                else :color="cyan"
+                pygame.draw.rect(screen,color,rating_rect,border_radius=10)
+                text=FONTS["AngryBirds_32"].render("TBD" if Player.matches==0 else str(Player.rating),True,"white")
+                screen.blit(text,(rating_rect[0]+(rating_rect[2]-text.get_width())//2,rating_rect[1]+(rating_rect[3]-text.get_height())//2))
+                if Player.matches > 0 :
+                    rank_surface = FONTS["AngryBirds_16"].render(f"#{Player.rank}", True, "white")
+                    screen.blit(rank_surface, (rating_rect[0], rating_rect[1] - 20))
+                
             display_tower(screen,Designs[curr_index],Sizes[curr_index])
             pygame.display.flip()
             clock.tick(60)

@@ -4,7 +4,6 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 import pygame
 import Physics.config
-import Utils.colors
 import Physics
 import load
 import math
@@ -35,7 +34,7 @@ class Bird(pygame.sprite.Sprite):
             3:10
         }
         self.image=pygame.Surface((20,20))
-        self.image.fill(Utils.colors.COLORS["red"])
+        self.image.fill("red")
         self.playing_image=self.image
         self.rect=self.image.get_rect()
         super().__init__(*groups)

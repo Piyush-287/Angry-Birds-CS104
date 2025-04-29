@@ -43,3 +43,4 @@ SUPER_STELLA,stella_super.png,0,0,0
 LEADERBOARD,leaderboard.png,0,0,0
 RESTART_1,Restart_button_win.png,0,0,0
 BACK_PLANK,Back_plank.png,0,0,0
+LBD,LEADERBOARD_1.png,0,0,0
