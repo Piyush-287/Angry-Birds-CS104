@@ -6,7 +6,6 @@ import pygame
 import Utils.config
 import Utils
 import load
-from settings import SETTINGS
 from Entities.Birds import *
 class Red(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
@@ -52,7 +51,7 @@ class Red(Bird):
                         self.Tower[xn][yn].health-=(q[0][2]*0.8)
                         q.append([xn,yn,q[0][2]*0.6])
                         if self.Tower[xn][yn].health <0 :
-                            SOUND[Block_Types[self.Tower[xn][yn].type]].set_volume(SETTINGS["Volume"]/100)
+                            SOUND[Block_Types[self.Tower[xn][yn].type]].set_volume(Utils.config.SETTINGS["Volume"]/100)
                             SOUND[Block_Types[self.Tower[xn][yn].type]].play()
                             self.Tower[xn][yn]=Block(self.Tower[i][j].posn,self.Tower[i][j].size,0)
                         print(self.Tower[xn][yn].health)

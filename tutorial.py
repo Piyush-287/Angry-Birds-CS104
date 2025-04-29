@@ -69,12 +69,12 @@ def tutorial(screen:pygame.Surface,clock):
     dt = clock.tick(TICKS)/1000
     screen_width,screen_height=screen.get_size()
     Surface=pygame.surface.Surface(VIRTUAL_SIZE)
-    player_data,left_list,_,Tower_left,Tower_right=Utils.helper.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])],Sizes,STATE)
+    player_data,left_list,_,Tower_left,Tower_right,_,_=Utils.helper.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])],Sizes,STATE)
     loop=True
     curr_bird=None
     while loop:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 loop=False
@@ -99,7 +99,7 @@ def tutorial(screen:pygame.Surface,clock):
     loop =True
     while loop:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 loop=False
@@ -126,7 +126,7 @@ def tutorial(screen:pygame.Surface,clock):
     rects=[]
     while loop:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
                for rect,bird in rects:
@@ -158,7 +158,7 @@ def tutorial(screen:pygame.Surface,clock):
     while loop:
         mouse_posn = Utils.helper.screen_to_virtual(pygame.mouse.get_pos(), (screen_width, screen_height), VIRTUAL_SIZE)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if Left_Sling.enable(mouse_posn):
@@ -209,7 +209,7 @@ def tutorial(screen:pygame.Surface,clock):
     loop = True
     while loop: 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 loop = False
             if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
                 if hint_index + 1>=len(Hints):
@@ -266,7 +266,7 @@ def tutorial(screen:pygame.Surface,clock):
     while loop:
         screen_width,screen_height=screen.get_size()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
                 if Bird_index+1 >= len(Bird_name):

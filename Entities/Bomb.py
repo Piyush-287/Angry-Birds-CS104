@@ -6,7 +6,6 @@ import pygame
 import Utils.config
 import Utils
 import load
-from settings import SETTINGS
 from Entities.Birds import *
 class Bomb(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):
@@ -58,7 +57,7 @@ class Bomb(Bird):
                             self.visited[i][j]=True 
                             self.Tower[i][j].health -= 10000/(distance)
                             if self.Tower[i][j].health < 0:
-                                SOUND[Block_Types[self.Tower[i][j].type]].set_volume(SETTINGS["Volume"]/100)
+                                SOUND[Block_Types[self.Tower[i][j].type]].set_volume(Utils.config.SETTINGS["Volume"]/100)
                                 SOUND[Block_Types[self.Tower[i][j].type]].play()
                                 self.Tower[i][j].image=None
                                 self.Tower[i][j].falling=False

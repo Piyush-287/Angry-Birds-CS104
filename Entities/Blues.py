@@ -6,7 +6,6 @@ import pygame
 import Utils.config
 import Utils
 import load
-from settings import SETTINGS
 from Entities.Birds import *
 class Blues(Bird):
     def __init__(self, posn, vel=(0, 0), *groups):

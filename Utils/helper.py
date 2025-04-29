@@ -19,7 +19,7 @@ def screen_to_virtual(mouse_pos, screen_size, virtual_size):
     virtual_y = (mouse_pos[1] + crop_y) / scale
     return (int(virtual_x), int(virtual_y)) 
 
-def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super_points,FONTS,SPRITE,STATE,n_frames=10):
+def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super_points,FONTS,SPRITE,STATE,enabled,n_frames=10):
     screen_w, screen_h = Surface.get_size()
     box_size    = int(0.1 * screen_h)
     spacing     = box_size + int(0.001 * screen_h)
@@ -35,9 +35,9 @@ def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super
     else:
         start_x = screen_w
         end_x   = screen_w - total_width - margin
-
     y_pos = margin * 2
     scaled_sprites = []
+    aura=[]
     for i  in range(3):
         print(str(type(birds_list[i])).upper())
         surf = SPRITE[str(type(birds_list[i])).split(".")[1].upper()][2]
@@ -45,12 +45,17 @@ def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super
         if not leftside:
             scaled=pygame.transform.flip(scaled,True,False)
         scaled_sprites.append(scaled)
-
+        sprite_list=[]
+        for j in range(4):
+            sprite_list.append(pygame.transform.smoothscale(SPRITE["AURA"][4*AURA_MAP[birds_list[i].type]+j],(int(1*box_size),int(1*box_size))))
+        aura.append(sprite_list)
     overlay = pygame.Surface((total_width, box_size), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 128))
-
+    dt=0
     def _draw_frame(x_offset):
-        nonlocal STATE
+        nonlocal STATE,dt
+        if dt >= 4:dt=-1
+        dt+=1
         Surface.blit(overlay, (x_offset, y_pos))
         if leftside:
             Surface.blit(text,(x_offset,y_pos-text.get_height()))
@@ -59,14 +64,14 @@ def display_animation_of_choosing(Surface, leftside, birds_list,playerdata,super
         Rects=[]
         for i, img in enumerate(scaled_sprites):
             rx = x_offset + i * spacing
-            if STATE["super"]:
-                if super_points[birds_list[i].type-1] >= 300:
-                    pygame.draw.rect(Surface,"green",( rx,y_pos, box_size, box_size))
+            if enabled:
+                if super_points[birds_list[i].type-1] >= SUPER_POINTS_FACTOR:
+                    Surface.blit(aura[i][(dt//3)%4], (rx , y_pos))
                 else :
                     temp=pygame.Surface((box_size,box_size),pygame.SRCALPHA)
-                    pygame.draw.rect(temp,"green",(0,0,box_size,int(super_points[birds_list[i].type-1]*box_size/300)))
+                    pygame.draw.rect(temp,"green",(0,0,box_size,int(super_points[birds_list[i].type-1]*box_size/SUPER_POINTS_FACTOR)))
                     temp.set_alpha(32)
-                    Surface.blit(temp,(rx,y_pos+int(box_size-super_points[birds_list[i].type-1]*box_size/300)))
+                    Surface.blit(temp,(rx,y_pos+int(box_size-super_points[birds_list[i].type-1]*box_size/SUPER_POINTS_FACTOR)))
             rectangle=pygame.draw.rect(Surface, "black", ( rx,y_pos, box_size, box_size), width=outline_w)
             pygame.draw.rect(Surface, "orange",rectangle,width=2)
             if STATE["selected_rect"]==rectangle:
@@ -117,7 +122,9 @@ def initialize(screen,location,Sizes,STATE):
     tower_right_data = eval(lines[4].strip())
     tower_right=initialise_tower(tower_right_data,Sizes[player_data[3]],screen,location[1],False)
     STATE["player1turn"]=eval(lines[5].strip())
-    return player_data,left_list,right_list,tower_left,tower_right
+    super_points_left=eval(lines[6].strip())
+    super_points_right=eval(lines[7].strip())
+    return player_data,left_list,right_list,tower_left,tower_right,super_points_left,super_points_right
 def get_bird(leftside,no):
     match no:
         case 1: return Red(((0.25 if leftside else 0.75)*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-BASE_LOC-10),(0,0))

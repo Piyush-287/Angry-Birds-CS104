@@ -105,7 +105,6 @@ def get_player_data(screen,clock):
         wait=0
         player_name = initial_input
         active = False
-        help_text=FONTS["AngryBirds_32"].render("Press 'Enter' again to confirm!",True,"white")
         help=False
         while running:
             BASE_LOC=screen.get_height() * 0.8
@@ -205,8 +204,9 @@ def get_player_data(screen,clock):
                 if Player.matches > 0 :
                     rank_surface = FONTS["AngryBirds_16"].render(f"#{Player.rank}", True, "white")
                     screen.blit(rank_surface, (rating_rect[0], rating_rect[1] - 20))
-            if help:
-                # help_text=pygame.transform.smoothscale_by(help_text,0.05*screen_height/help_text.get_height())
+            if help:   
+                help_text=FONTS["AngryBirds_32"].render("Press 'Enter' again to confirm!",True,"white")
+                help_text=pygame.transform.smoothscale_by(help_text,0.05*screen_height/help_text.get_height())
                 screen.blit(help_text,((screen_width-help_text.get_width())//2,0.95*screen_height))
             display_tower(screen,Designs[curr_index],Sizes[curr_index])
             pygame.display.flip()
@@ -248,7 +248,9 @@ def get_player_data(screen,clock):
         file.write(str(nos)+"\n")
         file.write(str([(tile,100) for tile in Designs[Tower1]])+"\n")
         file.write(str([(tile,100) for tile in Designs[Tower2]])+"\n")
-        file.write("True")
+        file.write("True"+"\n")
+        file.write(str([0 for  _ in range(5)])+"\n")
+        file.write(str([0 for  _ in range(5)]))
     # fade out 
     fade_out(screen,clock)
     return [Player1,Player2,Tower1,Tower2]

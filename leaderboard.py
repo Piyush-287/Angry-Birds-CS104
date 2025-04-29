@@ -7,7 +7,7 @@ class Player():
         self.rating = rating
         self.matches = matches
         self.win = win
-        self.scalefactor = 30
+        self.scalefactor = 100
         self.rank = rank
 
     def update(self, exp, score):
@@ -15,7 +15,7 @@ class Player():
         if score > 5:
             self.win += 1
         if self.matches > 3:
-            self.scalefactor = 100
+            self.scalefactor = 300
         self.rating += int(self.scalefactor * (score - exp))
 def get_player(name):
     if name in Playerlist:
@@ -43,6 +43,9 @@ def insert(player):
 
 def update_rating(player1: Player, player2: Player, score_player1):
     exp1 = 1 / (1 + 10 ** ((player2.rating - player1.rating) / 400))
+    if score_player1 > 0.5:
+        player1.win+=1
+    else :player2.win+=1
     player1.update(exp1, score_player1)
     player2.update(1 - exp1, 1 - score_player1)
     reposition(player1)
@@ -50,7 +53,8 @@ def update_rating(player1: Player, player2: Player, score_player1):
     save_data()
 
 def reposition(player):
-    RankedPlayerList.remove(player)
+    if player in RankedPlayerList:
+        RankedPlayerList.remove(player)
     insert(player)
 
 def save_data():
@@ -90,7 +94,7 @@ def show_leaderboard(screen: pygame.Surface, clock: pygame.time.Clock):
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running == False
+                    running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:  
                     scroll_y = min(scroll_y + scroll_speed, -(tile_height + tile_spacing))
@@ -165,13 +169,3 @@ def show_leaderboard(screen: pygame.Surface, clock: pygame.time.Clock):
                     leaderboard_surface.blit(matches_text, (right_x, tile_rect.y + tile_height // 4))
         screen.blit(leaderboard_surface, (0, lb_top))
         pygame.display.flip()
-
-if __name__=="__main__":
-    WINDOW_SIZE=(1000,500)
-    screen=pygame.display.set_mode(WINDOW_SIZE,pygame.RESIZABLE)
-    pygame.display.set_caption("Leaderboard")
-    clock=pygame.time.Clock()
-    TICKS=10
-    IMAGES,RESIZED,SPRITE=load_images()
-    FONTS=load_fonts()
-    show_leaderboard(screen,clock)

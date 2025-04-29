@@ -1,29 +1,21 @@
-SETTINGS={
-    "autozoom" : False,
-    "zoom_speed" : 5,
-    "offset_speed" : 3,
-    "default_zoom" : 2,
-    "autosave":True,
-    "Super":True,
-    "Music":False,
-    "Volume":0.5
-}
+
 import pygame
 import load
 import Scenes.background as background
 pygame.init()
 FONTS=load.load_fonts()
-def save_settings():
+def save_settings(SETTINGS):
     with open("Data/settings.txt","w") as file:
         for key,item in SETTINGS.items():
             file.write(str(item)+"\n")
-def load_settings():
+def load_settings(SETTINGS):
     with open("Data/settings.txt","r") as file:
         for key,item in SETTINGS.items():
             SETTINGS[key]=eval(file.readline())
+    return SETTINGS
 
-def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
-    load_settings()
+def get_settings(SETTINGS,screen:pygame.Surface,clock:pygame.time.Clock):
+    load_settings(SETTINGS)
     global FONTS
     screen_width,screen_height=screen.get_size()
     words=["Autozoom","Autosave","Super Birds","Music"]
@@ -70,7 +62,7 @@ def get_settings(screen:pygame.Surface,clock=pygame.time.Clock):
                 if 0.69*screen_height<mouse_pos[1]<0.72*screen_height:
                     DRAG=True
                 if save_hover:
-                    save_settings()
+                    save_settings(SETTINGS)
                     return 1
             if event.type==pygame.MOUSEBUTTONUP:
                 DRAG=False

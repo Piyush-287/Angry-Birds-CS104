@@ -7,7 +7,6 @@ import Utils.config
 import Utils
 import load
 import math
-from settings import SETTINGS
 BASE_LOC=200
 SOUND=load.load_sound()
 SCALING_DAMAGE_FACTOR=0.02
@@ -134,7 +133,7 @@ class Block(pygame.sprite.Sprite):
                 self.health-=self.velocity/100 * DAMAGE_FALLING[self.type]
                 self.velocity = 0
                 if self.health < 0 :
-                    SOUND[Block_Types[self.type]].set_volume(SETTINGS["Volume"]/100)
+                    SOUND[Block_Types[self.type]].set_volume(Utils.config.SETTINGS["Volume"]/100)
                     SOUND[Block_Types[self.type]].play()
                     return False
         if self.health < 0 :

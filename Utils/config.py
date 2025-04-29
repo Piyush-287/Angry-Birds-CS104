@@ -20,3 +20,21 @@ STATE={
     "anyfall":False,
     "super":False
 }
+SETTINGS={
+    "autozoom" : False,
+    "zoom_speed" : 5,
+    "offset_speed" : 3,
+    "default_zoom" : 2,
+    "autosave":True,
+    "Super":True,
+    "Music":True,
+    "Volume":0.5
+}
+AURA_MAP={
+    1:2,
+    2:3,
+    3:0,
+    4:7,
+    5:5
+}
+SUPER_POINTS_FACTOR=300

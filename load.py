@@ -44,15 +44,6 @@ def load_sound():
     print("Loaded SOUND")
     return SOUND
 
-def get_settings():
-    SETTINGS={
-    "autozoom" : True,
-    "zoom_speed" : 5,
-    "offset_speed" : 3,
-    "default_zoom" : 2
-    }
-    return SETTINGS
-
 def read_designs():
     Designs,Sizes=list(),list()
     with open("Data/Towers.txt","r") as file:
@@ -71,5 +62,7 @@ def reload(Designs):
     lines[2]=str(list2)+"\n"
     lines[3]=str([(tile,100) for tile in Designs[data[2]]])+"\n"
     lines[4]=str([(tile,100) for tile in Designs[data[3]]])+"\n"
-    lines[5]="True"
+    lines[5]="True"+"\n"
+    lines[6]=str([0 for _ in range(5)])+"\n"
+    lines[7]=str([0 for _ in range(5)])
     with open("data/lastgame.txt","w") as file:file.writelines(lines)   

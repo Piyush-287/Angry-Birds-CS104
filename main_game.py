@@ -94,15 +94,17 @@ def main_game(screen:pygame.Surface,clock):
             file.write(str([bird.type for bird in right_list])+"\n")
             file.write(str([(block.type,block.health) for layer in Tower_left for block in layer])+"\n")
             file.write(str([(block.type,block.health) for layer in Tower_right for block in layer])+"\n")
-            file.write(str(STATE["player1turn"]))
+            file.write(str(STATE["player1turn"])+"\n")
+            file.write(str(super_points_left)+"\n")
+            file.write(str(super_points_right))
     def change_chances():
         nonlocal left_list,right_list,anim,super_points_left,super_points_right
         global STATE
         STATE["birdlaunched"]=False
         if not STATE["player1turn"]:
-            anim = helper.display_animation_of_choosing(screen, (not STATE["player1turn"]), left_list,player_data,super_points_left,FONTS,SPRITE,STATE)
+            anim = helper.display_animation_of_choosing(screen, (not STATE["player1turn"]), left_list,player_data,super_points_left,FONTS,SPRITE,STATE,SETTINGS["Super"])
         else:
-            anim = helper.display_animation_of_choosing(screen, (not STATE["player1turn"]), right_list,player_data,super_points_right,FONTS,SPRITE,STATE)
+            anim = helper.display_animation_of_choosing(screen, (not STATE["player1turn"]), right_list,player_data,super_points_right,FONTS,SPRITE,STATE,SETTINGS["Super"])
         STATE["player1turn"]=not STATE["player1turn"]
         STATE["super"]=False
     Surface=pygame.surface.Surface(VIRTUAL_SIZE)
@@ -116,17 +118,15 @@ def main_game(screen:pygame.Surface,clock):
     RESIZED["RSLING"]=pygame.transform.scale_by(IMAGES["RSLING"],0.15)
     Left_Sling=slingshot((0.25*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["LSLING"].get_size()[1]-195),RESIZED["LSLING"],(10,10),Surface.get_size()[1],True)
     Right_SLing=slingshot((0.75*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["RSLING"].get_size()[1]-195),RESIZED["RSLING"],(10,10),Surface.get_size()[1],False)
-    player_data,left_list,right_list,Tower_left,Tower_right=helper.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])],Sizes,STATE)
-    super_points_left=[0,0,0,0,0]
-    super_points_right=[0,0,0,0,0]
-    anim = helper.display_animation_of_choosing(screen, STATE["player1turn"], left_list if STATE["player1turn"] else right_list,player_data,super_points_left if STATE["player1turn"] else super_points_right,FONTS,SPRITE,STATE)
+    player_data,left_list,right_list,Tower_left,Tower_right,super_points_left,super_points_right=helper.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])],Sizes,STATE)
+    anim = helper.display_animation_of_choosing(screen, STATE["player1turn"], left_list if STATE["player1turn"] else right_list,player_data,super_points_left if STATE["player1turn"] else super_points_right,FONTS,SPRITE,STATE,SETTINGS["Super"])
     time_wait=-1
     prev_left_health=sum(block.health for layer in Tower_left for block in layer)
     prev_right_health=sum(block.health for layer in Tower_right for block in layer)
     left_health,right_health=prev_left_health,prev_right_health
     selection_ui_boxes:list[pygame.Rect]=[]
-    frame_capture=0
     curr_bird,text=None,None
+    no_of_block=sum(1 for block in Designs[player_data[2]] if block!=0)
     wait=0
     def fade_in():
         temp=pygame.Surface(VIRTUAL_SIZE,pygame.SRCALPHA)
@@ -151,7 +151,7 @@ def main_game(screen:pygame.Surface,clock):
         Winner_prev_rating,Loser_prev_rating=Winner.rating,Loser.rating
         leaderboard.update_rating(Winner,Loser,score)
         win_change=Winner.rating-Winner_prev_rating
-        lose_change=Loser.rating-Loser_prev_rating
+        lose_change=+Loser.rating-Loser_prev_rating
         temp = pygame.Surface(VIRTUAL_SIZE, pygame.SRCALPHA)
         temp.fill("black")
         temp.set_alpha(192)
@@ -162,6 +162,7 @@ def main_game(screen:pygame.Surface,clock):
         reveal_progress = 0
         clock = pygame.time.Clock()
         y=0
+        load.reload()
         leaderboard.save_data()
         while True:
             screen_width, screen_height = screen.get_size()
@@ -266,10 +267,6 @@ def main_game(screen:pygame.Surface,clock):
                                     super_points_left[curr_bird.type-1] = 0
                                 else:
                                     super_points_right[curr_bird.type-1] = 0
-                    case pygame.K_p:
-                        if frame_capture==0:frame_capture=1
-                        else :
-                            frame_capture=0
                     case _:
                         pass
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -353,13 +350,9 @@ def main_game(screen:pygame.Surface,clock):
                         if destroyed:
                             if not STATE["super"]:
                                 if STATE["player1turn"]:
-                                    print(super_points_left)
                                     super_points_left[curr_bird.type-1]+=100
-                                    print(super_points_left)
                                 else:
-                                    print(super_points_right)
                                     super_points_right[curr_bird.type-1]+=100
-                                    print(super_points_right)
                             layer[i]=Block(layer[i].posn,layer[i].size,0)
                             if to_update_for:
                                 Tower_right=curr_tower
@@ -374,10 +367,8 @@ def main_game(screen:pygame.Surface,clock):
                         right_health=sum(block.health for layer in Tower_right for block in layer)
                         if STATE["player1turn"]:
                             super_points_left[curr_bird.type-1]-=right_health-prev_left_health
-                            print(super_points_left)
                         else:
                             super_points_right[curr_bird.type-1]-=left_health-prev_left_health
-                            print(super_points_right)
 
         if STATE["anyfall"]:
             curr_tower= Utils.collision.tower_check(Surface, curr_tower)
@@ -391,12 +382,10 @@ def main_game(screen:pygame.Surface,clock):
         
         if all(block.type==0 or block.health<=0 for layer in Tower_left for block in layer):
             curr_bird=None
-            print(player_data[1],"won")
-            return win(False,0.6)
+            return win(False,1-right_health/(200*no_of_block))
         if all(block.type==0 or block.health<=0 for layer in Tower_right for block in layer):
-            print(player_data[0],"won")
             curr_bird=None
-            return win(True,0.6)
+            return win(True,1-right_health/(200*no_of_block))
         if STATE["offset"]:
             rel_change=pygame.mouse.get_rel()
             STATE["offset_x"]+=rel_change[0] * SETTINGS["offset_speed"]
@@ -425,9 +414,6 @@ def main_game(screen:pygame.Surface,clock):
             STATE["zoomed"]=False
         helper.display_zoomed(screen,Surface,STATE["offset_x"],STATE["offset_y"],STATE["zoom"],not to_update_for)
         if text:screen.blit(text,(0,0))
-        if frame_capture:
-            frame_capture+=1
-            pygame.image.save(screen, f"Assets/captures/capture{frame_capture}.png")
         try:
             selection_ui_boxes=next(anim)
         except StopIteration:

@@ -45,3 +45,4 @@ RESTART_1,Restart_button_win.png,0,0,0
 BACK_PLANK,Back_plank.png,0,0,0
 LBD,LEADERBOARD_1.png,0,0,0
 TUTORIAL,tutorial.png,0,0,0
+AURA,aura_1.png,0,4,9
