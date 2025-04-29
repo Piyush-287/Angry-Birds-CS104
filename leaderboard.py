@@ -70,7 +70,7 @@ def load_data():
             Playerlist[name] = player
             insert(player)
 import pygame
-from Scenes.Game.background.background import *
+from Scenes.background import *
 def show_leaderboard(screen: pygame.Surface, clock: pygame.time.Clock):
     load_data()
     TICKS = 60

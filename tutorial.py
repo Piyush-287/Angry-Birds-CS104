@@ -1,26 +1,18 @@
 import pygame
 VIRTUAL_SIZE=(1920,1080)
 import load
-from Scenes.Game.background.background import *
-from Physics.config import * 
+from Scenes.background import *
+from Utils.config import * 
 from Entities.slingshot import * 
 from Entities.Birds import * 
+from Entities.Red import * 
+from Entities.Blues import * 
+from Entities.Chuck import * 
+from Entities.Bomb import * 
+from Entities.Stella import * 
 from PlayerData import *
 import main_game
-STATE={
-    "zoomed"   : False,
-    "player1turn" : True,
-    "birdlaunched": False,
-    "offset" : False,
-    "offset_x" : 0,
-    "offset_y" : 0,
-    "target_zoom" : 1,
-    "zoom" : 1,
-    "selected_bird":None,
-    "selected_rect":None,
-    "anyfall":False,
-    "super":False
-}
+import Utils.helper
 pygame.init()
 BASE_LOC=200
 WINDOW_SIZE=(1000,500)
@@ -48,7 +40,7 @@ def display_final_choice(Surface, leftside, birds_list, playerdata):
         end_x = screen_w - total_width - margin
 
     y_pos = margin * 2
-    scaled_sprites = [pygame.transform.smoothscale(SPRITE[str(type(bird))[23:-2].upper()][2], (int(0.8 * box_size), int(0.8 * box_size))) for bird in birds_list]
+    scaled_sprites = [pygame.transform.smoothscale(SPRITE[str(type(bird)).split(".")[1].upper()][2], (int(0.8 * box_size), int(0.8 * box_size))) for bird in birds_list]
 
     overlay = pygame.Surface((total_width, box_size), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 128))
@@ -77,7 +69,7 @@ def tutorial(screen:pygame.Surface,clock):
     dt = clock.tick(TICKS)/1000
     screen_width,screen_height=screen.get_size()
     Surface=pygame.surface.Surface(VIRTUAL_SIZE)
-    player_data,left_list,_,Tower_left,Tower_right=main_game.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])])
+    player_data,left_list,_,Tower_left,Tower_right=Utils.helper.initialize(Surface,[(0.01*VIRTUAL_SIZE[0],0.20*VIRTUAL_SIZE[0]),(0.80*VIRTUAL_SIZE[0],0.99*VIRTUAL_SIZE[0])],Sizes,STATE)
     loop=True
     curr_bird=None
     while loop:
@@ -96,7 +88,7 @@ def tutorial(screen:pygame.Surface,clock):
         temp.set_alpha(192)
         Surface.blit(temp,(0,0))
         main_game.draw_tower(Tower_left,Surface)
-        main_game.display_zoomed(screen,Surface,0,0,1,True)
+        Utils.helper.display_zoomed(screen,Surface,0,0,1,True)
         text=FONTS["AngryBirds_32"].render("This is Your Tower", True, "black")
         rect=text.get_rect()
         pygame.draw.rect(screen,"orange",(0.1*screen_width-10,0.25*screen_height-10,rect[2]+20,rect[3]+20),border_radius=10)
@@ -122,7 +114,7 @@ def tutorial(screen:pygame.Surface,clock):
         temp.set_alpha(192)
         Surface.blit(temp,(0,0))
         main_game.draw_tower(Tower_right,Surface)
-        main_game.display_zoomed(screen,Surface,0,0,1,True)
+        Utils.helper.display_zoomed(screen,Surface,0,0,1,True)
         text=FONTS["AngryBirds_32"].render("This is Opponent's Tower", True, "black")
         rect=text.get_rect()
         pygame.draw.rect(screen,"orange",(0.65*screen_width-10,0.25*screen_height-10,rect[2]+20,rect[3]+20),border_radius=10)
@@ -151,7 +143,7 @@ def tutorial(screen:pygame.Surface,clock):
         temp.fill("black")
         temp.set_alpha(192) 
         Surface.blit(temp,(0,0))
-        main_game.display_zoomed(screen,Surface,0,0,1,True)
+        Utils.helper.display_zoomed(screen,Surface,0,0,1,True)
         rects=display_final_choice(screen,True,left_list[:3],player_data)
         text=FONTS["AngryBirds_32"].render("Choose Bird by clicking on that bird", True, "black")
         rect=text.get_rect()
@@ -164,7 +156,7 @@ def tutorial(screen:pygame.Surface,clock):
     RESIZED["LSLING"]=pygame.transform.scale_by(IMAGES["LSLING"],0.15)
     Left_Sling=slingshot((0.25*VIRTUAL_SIZE[0],VIRTUAL_SIZE[1]-0.15*IMAGES["LSLING"].get_size()[1]-195),RESIZED["LSLING"],(10,10),Surface.get_size()[1],True)
     while loop:
-        mouse_posn = main_game.screen_to_virtual(pygame.mouse.get_pos(), (screen_width, screen_height), VIRTUAL_SIZE)
+        mouse_posn = Utils.helper.screen_to_virtual(pygame.mouse.get_pos(), (screen_width, screen_height), VIRTUAL_SIZE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -199,7 +191,7 @@ def tutorial(screen:pygame.Surface,clock):
             curr_bird.x,curr_bird.y=mouse_posn
             curr_bird.vx,curr_bird.vy=Left_Sling.update(mouse_posn)
             curr_bird.xm,curr_bird.ym=curr_bird.x / METER,curr_bird.y /METER
-        main_game.display_zoomed(screen,Surface,0,0,1,True)
+        Utils.helper.display_zoomed(screen,Surface,0,0,1,True)
         pygame.draw.rect(screen,"orange",(0.05*screen_width-10,0.15*screen_height-10,rect[2]+20,rect[3]+20),border_radius=10)
         pygame.draw.rect(screen,"black",(0.05*screen_width-10,0.15*screen_height-10,rect[2]+20,rect[3]+20),border_radius=10,width=3)
         screen.blit(text,(0.05*screen_width,0.15*screen_height))
@@ -232,7 +224,7 @@ def tutorial(screen:pygame.Surface,clock):
         temp.fill("black")
         temp.set_alpha(192)
         Surface.blit(temp, (0, 0))
-        main_game.display_zoomed(screen, Surface, 0, 0, 1, True)
+        Utils.helper.display_zoomed(screen, Surface, 0, 0, 1, True)
         text = FONTS["AngryBirds_32"].render(Hints[hint_index], True, "black")
         rect = text.get_rect(center=(screen_width // 2, screen_height // 2))  
         pygame.draw.rect(screen, "orange", (rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20), border_radius=10)
@@ -289,7 +281,7 @@ def tutorial(screen:pygame.Surface,clock):
         temp.fill("black")
         temp.set_alpha(192)
         Surface.blit(temp, (0, 0))
-        main_game.display_zoomed(screen, Surface, 0, 0, 1, True)
+        Utils.helper.display_zoomed(screen, Surface, 0, 0, 1, True)
 
         text = FONTS["ShadowFight_48"].render(Bird_name[Bird_index], True, "black")
         rect = text.get_rect(center=(screen_width // 2, screen_height // 5))  

@@ -10,7 +10,7 @@ SETTINGS={
 }
 import pygame
 import load
-import Scenes.Game.background.background as background
+import Scenes.background as background
 pygame.init()
 FONTS=load.load_fonts()
 def save_settings():

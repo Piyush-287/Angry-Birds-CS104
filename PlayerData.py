@@ -1,18 +1,14 @@
 import pygame
 from Data import *
-import Scenes.Game.background.background
-from Scenes.UI.main_menu import *
+import Scenes.background
+from Scenes.main_menu import *
 from Entities.Button import *
 from load import *
-from Physics.config import * 
+from Utils.config import * 
 import random
 import leaderboard
 pygame.init()
 leaderboard.load_data()
-BIRDS=[
-
-]
-BASE_LOC=200
 def display_tower(screen:pygame.surface,curr,size):
     Blocks={
         1 : RESIZED["WOOD_4"],
@@ -25,25 +21,15 @@ def display_tower(screen:pygame.surface,curr,size):
             posn=((screen.get_size()[0]-size[0]*sprite_size[0])//2+i*sprite_size[0],BASE_LOC-(j+1)*sprite_size[1])
             typeofblock=curr[j*size[0]+i]
             if 1<=typeofblock<=3:screen.blit(Blocks[typeofblock],posn)
-
-screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
-pygame.display.set_caption("Enter Player Name")
-
-# Load assets
-IMAGES, RESIZED ,SPRITE= load_images()
-FONTS = load_fonts()
-
 Designs,Sizes=read_designs()
 mountain_x=0
-# Input setup
-clock = pygame.time.Clock()
-
-def get_player_data():
-    global BASE_LOC
+no_of_block=0
+def get_player_data(screen,clock):
+    global BASE_LOC,no_of_block
     running = True
     mountain_x=0
     def get_input(initial_input):
-        global BASE_LOC
+        global BASE_LOC,no_of_block
         nonlocal mountain_x,running
         BASE_LOC=screen.get_height() * 0.8
         active = False
@@ -51,14 +37,35 @@ def get_player_data():
         padding = 20
         input_box = pygame.Rect(0, 0, box_width, box_height) 
         curr_index=0
+        if no_of_block!=0:
+            while True:
+                curr_index=len(Designs)-1 if curr_index==0 else curr_index-1
+                x=sum(1 for block in Designs[curr_index] if block!=0)
+                if x==no_of_block:break
         rating_rect = None
         Player=None
         def scrollleft():
             nonlocal curr_index
-            curr_index=len(Designs)-1 if curr_index==0 else curr_index-1
+            global no_of_block
+            if no_of_block!=0:
+                while True:
+                    curr_index=len(Designs)-1 if curr_index==0 else curr_index-1
+                    x=sum(1 for block in Designs[curr_index] if block!=0)
+                    if x==no_of_block:break
+            else :
+                curr_index=len(Designs)-1 if curr_index==0 else curr_index-1
+
         def scrollright():
             nonlocal curr_index
-            curr_index=(curr_index+1)%len(Designs)
+            global no_of_block
+            if no_of_block!=0:
+                while True:
+                    curr_index=(curr_index+1)%len(Designs)
+                    x=sum(1 for block in Designs[curr_index] if block!=0)
+                    if x==no_of_block:break
+            else:
+                curr_index=(curr_index+1)%len(Designs)
+
         def redraw_screen():
             screen_width, screen_height = screen.get_size() 
             screen.fill("orange")
@@ -98,6 +105,8 @@ def get_player_data():
         wait=0
         player_name = initial_input
         active = False
+        help_text=FONTS["AngryBirds_32"].render("Press 'Enter' again to confirm!",True,"white")
+        help=False
         while running:
             BASE_LOC=screen.get_height() * 0.8
             screen_width, screen_height = screen.get_size()
@@ -121,6 +130,7 @@ def get_player_data():
                         if player_name==initial_input:player_name = ''
                     else:
                         active = False
+                        help=True
                     left_button.check_click(event.pos)
                     right_button.check_click(event.pos)
                 elif event.type==pygame.KEYDOWN and not active:
@@ -130,7 +140,8 @@ def get_player_data():
                 elif event.type == pygame.KEYDOWN and active:
                     if event.key == pygame.K_RETURN:
                         print("Player Name:", player_name)
-                        Player=leaderboard.get_player(player_name)
+                        if len(player_name)==0:
+                            continue
                         Player=leaderboard.add_player(player_name)
                         return player_name,curr_index
                     elif event.key == pygame.K_BACKSPACE:
@@ -194,7 +205,9 @@ def get_player_data():
                 if Player.matches > 0 :
                     rank_surface = FONTS["AngryBirds_16"].render(f"#{Player.rank}", True, "white")
                     screen.blit(rank_surface, (rating_rect[0], rating_rect[1] - 20))
-                
+            if help:
+                help_text=pygame.transform.smoothscale_by(help_text,0.05*screen_height/help_text.get_height())
+                screen.blit(help_text,((screen_width-help_text.get_width())//2,0.95*screen_height))
             display_tower(screen,Designs[curr_index],Sizes[curr_index])
             pygame.display.flip()
             clock.tick(60)
@@ -204,6 +217,7 @@ def get_player_data():
     Player1,Tower1=get_input("Player1")
     if not Player1:
         return False
+    no_of_block=sum(1 for block in Designs[Tower1] if block!=0)
     global BASE_LOC
     while running and mountain_x+screen_width>0:
         screen_width, screen_height = screen.get_size()
@@ -247,6 +261,3 @@ def fade_out(screen,clock):
         screen.blit(temp,(0,0))
         pygame.display.flip()
         clock.tick(60)
-if __name__=="__main__":
-    output=print(get_player_data())
-    print("========>",output)

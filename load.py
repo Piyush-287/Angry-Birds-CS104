@@ -1,4 +1,5 @@
 import pygame
+import random
 pygame.font.init()
 pygame.display.init()
 IMAGES,RESIZED,SPRITE=dict(),dict(),dict()
@@ -60,3 +61,15 @@ def read_designs():
             Sizes.append(data[0:2])
             Designs.append(data[2:])
     return Designs,Sizes
+
+def reload(Designs):
+    with open("data/lastgame.txt","r") as file:lines=file.readlines()
+    data,list1,list2=eval(lines[0]),eval(lines[1]),eval(lines[2])
+    random.shuffle(list1)
+    random.shuffle(list2)
+    lines[1]=str(list1)+"\n"
+    lines[2]=str(list2)+"\n"
+    lines[3]=str([(tile,100) for tile in Designs[data[2]]])+"\n"
+    lines[4]=str([(tile,100) for tile in Designs[data[3]]])+"\n"
+    lines[5]="True"
+    with open("data/lastgame.txt","w") as file:file.writelines(lines)   

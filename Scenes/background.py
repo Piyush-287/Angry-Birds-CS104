@@ -3,7 +3,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from load import *
-from Physics.config import * 
+from Utils.config import * 
 def generate_background(Surface : pygame.Surface):
     global IMAGES
     if RESIZED["BACKGROUND_IMAGE"].get_size() != Surface.get_size():
@@ -19,7 +19,7 @@ def generate_mountains(Surface : pygame.Surface):
 if __name__=="__main__":
     import pygame
     import random 
-    import Scenes.Game.background.background as Background
+    import Scenes.background as Background
     import load 
     import Entities.Birds as Birds
     import Entities.slingshot as slingshot
@@ -68,7 +68,7 @@ if __name__=="__main__":
             SLINGSHOT.update((ABIRD.x,ABIRD.y))
             ABIRD.x-=10
             ABIRD.y-=10
-            ABIRD.xm,ABIRD.ym=ABIRD.x / Birds.Physics.config.METER,ABIRD.y / Birds.Physics.config.METER
+            ABIRD.xm,ABIRD.ym=ABIRD.x / Birds.Utils.config.METER,ABIRD.y / Birds.Utils.config.METER
         #Background 
         screen.fill(BG_COLOR)
         generate_background(screen)

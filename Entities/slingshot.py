@@ -3,7 +3,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 import pygame 
-from Physics.config import *
+from Utils.config import *
 VIRTUAL_SIZE=(1920,1080)
 class slingshot(pygame.sprite.Sprite):
     def __init__(self,posn,image,bird_size,screen_height,leftfacing, *groups):

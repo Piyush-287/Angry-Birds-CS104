@@ -1,7 +1,6 @@
-# Main File to run complete program. Currently under progress.
 import pygame
 import load
-import Scenes.UI.main_menu as menu
+import Scenes.main_menu as menu
 import main_game
 import PlayerData
 import settings
@@ -23,20 +22,21 @@ while game:
             game=False
         case 1:
             PlayerData.fade_out(screen,clock)
-            data=PlayerData.get_player_data()
+            data=PlayerData.get_player_data(screen,clock)
             if data:
                 PlayerData.fade_out(screen,clock)
                 x=main_game.main_game(screen,clock)
                 while x:
                     PlayerData.fade_out(screen,clock)
-                    if x==2:data=PlayerData.get_player_data()
+                    if x==2:data=PlayerData.get_player_data(screen,clock)
                     x=main_game.main_game(screen,clock)
         case 2:
+            
             PlayerData.fade_out(screen,clock)
             x=main_game.main_game(screen,clock)
             while x:
                 PlayerData.fade_out(screen,clock)
-                if x==2:data=PlayerData.get_player_data()
+                if x==2:data=PlayerData.get_player_data(screen,clock)
                 x=main_game.main_game(screen,clock)
         case 3:
             PlayerData.fade_out(screen,clock)
