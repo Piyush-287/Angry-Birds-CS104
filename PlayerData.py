@@ -206,7 +206,7 @@ def get_player_data(screen,clock):
                     rank_surface = FONTS["AngryBirds_16"].render(f"#{Player.rank}", True, "white")
                     screen.blit(rank_surface, (rating_rect[0], rating_rect[1] - 20))
             if help:
-                help_text=pygame.transform.smoothscale_by(help_text,0.05*screen_height/help_text.get_height())
+                # help_text=pygame.transform.smoothscale_by(help_text,0.05*screen_height/help_text.get_height())
                 screen.blit(help_text,((screen_width-help_text.get_width())//2,0.95*screen_height))
             display_tower(screen,Designs[curr_index],Sizes[curr_index])
             pygame.display.flip()
